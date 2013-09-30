@@ -14,13 +14,11 @@
  * limitations under the License.
  */
 
-package org.jetbrains.jet.lang.descriptors.annotations;
+package org.jetbrains.kotlin.util
 
-import org.jetbrains.annotations.NotNull;
+fun Boolean.iif<T>(then: T, _else: T): T = if (this) then else _else
 
-import java.util.List;
-
-public interface Annotated {
-    @NotNull
-    List<AnnotationDescriptor> getAnnotations();
-}
+// These two functions are needed in conjunction with iif:
+// foo.eq(bar).iif(a, b)
+fun <T> T.eq(eq: T): Boolean = this == eq
+fun <T> T.neq(eq: T): Boolean = this != eq

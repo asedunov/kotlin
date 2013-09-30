@@ -48,10 +48,18 @@ import static org.jetbrains.jet.lang.resolve.java.DescriptorSearchRule.INCLUDE_K
 
 public final class JavaNamespaceResolver {
 
+    private static ModuleDescriptor ourFakeRootModule;
+
     @NotNull
-    public static final ModuleDescriptor FAKE_ROOT_MODULE = new ModuleDescriptorImpl(JavaDescriptorResolver.JAVA_ROOT,
-                                                                                     JavaBridgeConfiguration.ALL_JAVA_IMPORTS,
-                                                                                     JavaToKotlinClassMap.getInstance());
+    public static ModuleDescriptor getOurFakeRootModule() {
+        if (ourFakeRootModule == null) {
+            ourFakeRootModule = new ModuleDescriptorImpl(JavaDescriptorResolver.JAVA_ROOT,
+                                                        JavaBridgeConfiguration.ALL_JAVA_IMPORTS,
+                                                        JavaToKotlinClassMap.getInstance());
+        }
+        return ourFakeRootModule;
+    }
+
     @NotNull
     private final Map<FqName, JetScope> resolvedNamespaceCache = new HashMap<FqName, JetScope>();
     @NotNull
@@ -130,7 +138,7 @@ public final class JavaNamespaceResolver {
     @Nullable
     private NamespaceDescriptorParent resolveParentNamespace(@NotNull FqName fqName) {
         if (fqName.isRoot()) {
-            return FAKE_ROOT_MODULE;
+            return getOurFakeRootModule();
         }
         else {
             return resolveNamespace(fqName.parent(), INCLUDE_KOTLIN_SOURCES);

@@ -1,0 +1,63 @@
+package org.jetbrains.jet.lang.resolve.java.lazy.descriptors
+
+import com.google.common.collect.Lists
+import org.jetbrains.jet.lang.descriptors.*
+import org.jetbrains.jet.lang.resolve.java.JavaClassFinder
+import org.jetbrains.jet.storage.NotNullLazyValue
+import org.jetbrains.jet.storage.StorageManager
+import org.jetbrains.jet.lang.resolve.name.LabelName
+import org.jetbrains.jet.lang.resolve.name.Name
+import org.jetbrains.jet.lang.resolve.scopes.JetScope
+import java.util.Collections
+import org.jetbrains.jet.utils.emptyList
+
+public abstract class LazyJavaMemberScope(
+        private val _containingDeclaration: DeclarationDescriptor, 
+        protected val storageManager: StorageManager, 
+        protected val finder: JavaClassFinder
+) : JetScope {
+    private val allDescriptors: NotNullLazyValue<MutableCollection<DeclarationDescriptor>> = storageManager.createLazyValue{computeAllDescriptors()}
+
+    override fun getContainingDeclaration() = _containingDeclaration
+
+    // No object can be defined in Java
+    override fun getObjectDescriptor(name: Name): ClassDescriptor? = null
+    override fun getObjectDescriptors() = emptyList<ClassDescriptor>()
+
+    // namespaces should be resolved elsewhere
+    override fun getNamespace(name: Name): NamespaceDescriptor? = null
+
+    override fun getLocalVariable(name: Name): VariableDescriptor? = null
+    override fun getDeclarationsByLabel(labelName: LabelName) = emptyList<DeclarationDescriptor>()
+
+    override fun getOwnDeclaredDescriptors() = getAllDescriptors()
+    override fun getAllDescriptors() = allDescriptors.compute()
+
+    private fun computeAllDescriptors(): MutableCollection<DeclarationDescriptor> {
+        val result = arrayListOf<DeclarationDescriptor>()
+
+        for (name in getAllClassNames()) {
+            val descriptor = getClassifier(name)
+            assert(descriptor != null) {"Descriptor not found for name " + name + " in " + getContainingDeclaration()}
+            result.add(descriptor!!)
+        }
+
+        for (name in getAllFunctionNames()) {
+            result.addAll(getFunctions(name))
+        }
+
+        for (name in getAllPropertyNames()) {
+            result.addAll(getProperties(name))
+        }
+
+        addExtraDescriptors(result)
+
+        return result
+    }
+    protected abstract fun getAllClassNames(): Collection<Name>
+    protected abstract fun getAllPropertyNames(): Collection<Name>
+    protected abstract fun getAllFunctionNames(): Collection<Name>
+    protected abstract fun addExtraDescriptors(result: MutableCollection<in DeclarationDescriptor>)
+
+
+}

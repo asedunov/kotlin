@@ -14,13 +14,8 @@
  * limitations under the License.
  */
 
-package org.jetbrains.jet.lang.descriptors.annotations;
+package org.jetbrains.jet.storage
 
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.jet.storage.NotNullLazyValue
 
-import java.util.List;
-
-public interface Annotated {
-    @NotNull
-    List<AnnotationDescriptor> getAnnotations();
-}
+fun <T> NotNullLazyValue<T>.get(_: Any?, __: Any?): T = compute()

@@ -14,13 +14,10 @@
  * limitations under the License.
  */
 
-package org.jetbrains.jet.lang.descriptors.annotations;
+package org.jetbrains.jet.storage
 
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.jet.storage.MemoizedFunctionToNullable
+import org.jetbrains.jet.storage.MemoizedFunctionToNotNull
 
-import java.util.List;
-
-public interface Annotated {
-    @NotNull
-    List<AnnotationDescriptor> getAnnotations();
-}
+public fun <P, R: Any> MemoizedFunctionToNullable<P, R>.invoke(p: P): R? = `fun`(p)
+public fun <P, R: Any> MemoizedFunctionToNotNull<P, R>.invoke(p: P): R = `fun`(p)
