@@ -13,17 +13,15 @@ public class LazyJavaPackageFragmentScope(
 ) : LazyJavaMemberScope(containingDeclaration, storageManager, finder) {
     
     private val fqName = DescriptorUtils.getFQName(containingDeclaration).toSafe()
-    private val classes = storageManager.createMemoizedFunctionWithNullableValues<Name, ClassDescriptor>(
-            {
+    private val classes = storageManager.createMemoizedFunctionWithNullableValues<Name, ClassDescriptor> {
                 name ->
-                val fqName = fqName.child(name!!)
+                val fqName = fqName.child(name)
                 val javaClass = finder.findClass(fqName)
                 if (javaClass == null)
                     null
                 else
                     LazyJavaClassDescriptor(storageManager, containingDeclaration, fqName, javaClass)
-            },
-            StorageManager.ReferenceKind.STRONG)
+            }
 
     override fun getAllClassNames(): Collection<Name> {
         val javaPackage = finder.findPackage(fqName)
@@ -38,20 +36,16 @@ public class LazyJavaPackageFragmentScope(
         // no extra descriptors
     }
 
-    override fun getClassifier(name: Name): ClassifierDescriptor {
+    override fun getClassifier(name: Name): ClassifierDescriptor? = classes(name)
+
+    override fun getProperties(name: Name): Collection<VariableDescriptor> {
         throw UnsupportedOperationException()
     }
 
-    override fun getProperties(name: Name): MutableCollection<VariableDescriptor> {
+    override fun getFunctions(name: Name): Collection<FunctionDescriptor> {
         throw UnsupportedOperationException()
     }
 
-    override fun getFunctions(name: Name): MutableCollection<FunctionDescriptor> {
-        throw UnsupportedOperationException()
-    }
-
-    override fun getImplicitReceiversHierarchy(): MutableList<ReceiverParameterDescriptor> {
-        throw UnsupportedOperationException()
-    }
+    override fun getImplicitReceiversHierarchy(): List<ReceiverParameterDescriptor> = listOf()
 
 }

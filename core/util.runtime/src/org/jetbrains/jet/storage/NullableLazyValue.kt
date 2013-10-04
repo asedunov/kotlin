@@ -16,8 +16,6 @@
 
 package org.jetbrains.jet.storage
 
-import org.jetbrains.jet.storage.MemoizedFunctionToNullable
-import org.jetbrains.jet.storage.MemoizedFunctionToNotNull
-
-public fun <P, R: Any> MemoizedFunctionToNullable<P, R>.invoke(p: P): R? = invoke(p)
-public fun <P, R: Any> MemoizedFunctionToNotNull<P, R>.invoke(p: P): R = invoke(p)
+public trait NullableLazyValue<T: Any> : Function0<T?> {
+    fun isComputed(): Boolean
+}

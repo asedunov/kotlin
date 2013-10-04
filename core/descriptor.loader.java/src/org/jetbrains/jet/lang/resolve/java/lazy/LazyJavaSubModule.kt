@@ -6,7 +6,6 @@ import org.jetbrains.jet.lang.resolve.java.lazy.descriptors.LazyJavaPackageFragm
 import org.jetbrains.jet.storage.MemoizedFunctionToNullable
 import org.jetbrains.jet.storage.StorageManager
 import org.jetbrains.jet.lang.resolve.name.FqName
-import org.jetbrains.jet.storage.StorageManager.ReferenceKind.STRONG
 import org.jetbrains.jet.lang.resolve.java.JavaClassFinder
 
 public open class LazyJavaSubModule(
@@ -15,7 +14,5 @@ public open class LazyJavaSubModule(
         finder: JavaClassFinder
 ) {
     public val packageFragments: MemoizedFunctionToNullable<FqName, NamespaceDescriptor>
-            = storageManager.createMemoizedFunctionWithNullableValues(
-                {fqName -> LazyJavaPackageFragment(storageManager, module, finder, fqName!!)},
-                STRONG)
+            = storageManager.createMemoizedFunctionWithNullableValues {fqName -> LazyJavaPackageFragment(storageManager, module, finder, fqName)}
 }

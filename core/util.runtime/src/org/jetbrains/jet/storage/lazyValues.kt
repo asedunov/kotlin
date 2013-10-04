@@ -18,4 +18,4 @@ package org.jetbrains.jet.storage
 
 import org.jetbrains.jet.storage.NotNullLazyValue
 
-fun <T> NotNullLazyValue<T>.get(_: Any?, __: Any?): T = compute()
+fun <T> NotNullLazyValue<T>.get(_: Any?, __: Any?): T = invoke()

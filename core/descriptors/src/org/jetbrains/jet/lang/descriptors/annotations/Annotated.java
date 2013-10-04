@@ -17,10 +17,12 @@
 package org.jetbrains.jet.lang.descriptors.annotations;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.ReadOnly;
 
 import java.util.List;
 
 public interface Annotated {
     @NotNull
+    @ReadOnly
     List<AnnotationDescriptor> getAnnotations();
 }

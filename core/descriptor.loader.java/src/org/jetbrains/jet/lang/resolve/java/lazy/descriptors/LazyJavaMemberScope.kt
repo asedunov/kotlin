@@ -31,7 +31,7 @@ public abstract class LazyJavaMemberScope(
     override fun getDeclarationsByLabel(labelName: LabelName) = emptyList<DeclarationDescriptor>()
 
     override fun getOwnDeclaredDescriptors() = getAllDescriptors()
-    override fun getAllDescriptors() = allDescriptors.compute()
+    override fun getAllDescriptors() = allDescriptors()
 
     private fun computeAllDescriptors(): MutableCollection<DeclarationDescriptor> {
         val result = arrayListOf<DeclarationDescriptor>()

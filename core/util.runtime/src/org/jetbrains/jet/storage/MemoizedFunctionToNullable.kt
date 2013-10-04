@@ -14,16 +14,6 @@
  * limitations under the License.
  */
 
-package org.jetbrains.jet.storage;
+package org.jetbrains.jet.storage
 
-import jet.Function0;
-import org.jetbrains.annotations.NotNull;
-
-public interface NotNullLazyValue<T> extends Function0<T> {
-    @Override
-    @NotNull
-    T invoke();
-
-    // Needed for proper toString() behaviors
-    boolean isComputed();
-}
+public trait MemoizedFunctionToNullable<P, R: Any> : Function1<P, R?>

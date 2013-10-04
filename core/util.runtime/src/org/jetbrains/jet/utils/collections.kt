@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-package org.jetbrains.jet.storage;
+package org.jetbrains.jet.utils
 
-import jet.Function1;
-import org.jetbrains.annotations.Nullable;
+import java.util.LinkedHashMap
 
-public interface MemoizedFunctionToNullable<P, R> extends Function1<P, R> {
-    @Override
-    @Nullable
-    R invoke(P p);
+public fun <K, V> Iterable<V>.toMap(key: (V) -> K): Map<K, V> {
+    val map = LinkedHashMap<K, V>()
+    for (v in this) {
+        map[key(v)] = v
+    }
+    return map
 }

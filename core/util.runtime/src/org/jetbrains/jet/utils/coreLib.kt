@@ -22,3 +22,9 @@ fun Boolean.iif<T>(then: T, _else: T): T = if (this) then else _else
 // foo.eq(bar).iif(a, b)
 fun <T> T.eq(eq: T): Boolean = this == eq
 fun <T> T.neq(eq: T): Boolean = this != eq
+
+fun <T: Any> T?.sure(message: String): T {
+    if (this == null)
+        throw AssertionError(message)
+    return this
+}

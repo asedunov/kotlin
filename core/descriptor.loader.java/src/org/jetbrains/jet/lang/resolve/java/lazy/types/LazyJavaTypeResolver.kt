@@ -39,7 +39,8 @@ import org.jetbrains.jet.lang.resolve.java.structure.JavaClass
 import org.jetbrains.kotlin.util.sure
 import org.jetbrains.jet.lang.resolve.java.lazy.LazyJavaClassResolver
 import org.jetbrains.jet.lang.resolve.java.lazy.TypeParameterResolver
-import org.jetbrains.jet.lang.descriptors.annotations.Annotated
+import org.jetbrains.jet.lang.resolve.java.lazy.descriptors.LazyJavaTypeParameterDescriptor
+import org.jetbrains.jet.lang.resolve.java.lazy.TypeParameterResolverImpl
 
 class LazyJavaTypeResolver(
         private val storageManager: StorageManager,
@@ -47,6 +48,12 @@ class LazyJavaTypeResolver(
         private val typeParameterResolver: TypeParameterResolver
 ) {
     private val NOT_NULL_POSITIONS = setOf(TYPE_ARGUMENT, UPPER_BOUND, SUPERTYPE_ARGUMENT, SUPERTYPE)
+
+
+    public fun child(additionalTypeParameters: Collection<LazyJavaTypeParameterDescriptor>): LazyJavaTypeResolver {
+        return LazyJavaTypeResolver(storageManager, javaClassResolver,
+                                    TypeParameterResolverImpl(additionalTypeParameters, typeParameterResolver))
+    }
 
     public fun transformJavaType(javaType: JavaType, howThisTypeIsUsed: TypeUsage): JetType {
         return when (javaType) {
@@ -161,7 +168,7 @@ class LazyJavaTypeResolver(
             (descriptor as ClassDescriptor).getMemberScope(getArguments())
         }
 
-        override fun getMemberScope() = _memberScope.compute()
+        override fun getMemberScope() = _memberScope()
 
         override fun isNullable() = false
 
