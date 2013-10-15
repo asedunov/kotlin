@@ -17,6 +17,7 @@ import java.util.Collections
 import org.jetbrains.jet.lang.resolve.java.lazy.LazyJavaResolverContextWithTypes
 import org.jetbrains.jet.lang.resolve.DescriptorFactory
 import org.jetbrains.jet.lang.resolve.java.lazy.child
+import org.jetbrains.jet.lang.resolve.java.resolver.TypeUsage
 
 class LazyJavaClassDescriptor(
         private val c: LazyJavaResolverContextWithTypes,
@@ -58,10 +59,8 @@ class LazyJavaClassDescriptor(
     // TODO
     override fun getConstructors() = emptyOrSingletonList(getUnsubstitutedPrimaryConstructor())
 
-    // TODO
     override fun getClassObjectType(): JetType? = null
 
-    // TODO
     override fun getClassObjectDescriptor(): ClassDescriptor? = null
 
     // TODO
@@ -79,10 +78,14 @@ class LazyJavaClassDescriptor(
 
         override fun getParameters(): List<TypeParameterDescriptor> = _parameters()
 
-        override fun getSupertypes(): Collection<JetType> {
-            // TODO
-            throw UnsupportedOperationException()
+        private val _supertypes = c.storageManager.createLazyValue {
+            jClass.getSupertypes().map {
+                supertype ->
+                innerC.typeResolver.transformJavaType(supertype, TypeUsage.SUPERTYPE)
+            }
         }
+
+        override fun getSupertypes(): Collection<JetType> = _supertypes()
 
         override fun getAnnotations() = Collections.emptyList<AnnotationDescriptor>()
 
