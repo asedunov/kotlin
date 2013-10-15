@@ -41,6 +41,7 @@ import org.jetbrains.jet.lang.resolve.java.lazy.TypeParameterResolver
 import org.jetbrains.jet.lang.resolve.java.lazy.descriptors.LazyJavaTypeParameterDescriptor
 import org.jetbrains.jet.lang.resolve.java.lazy.TypeParameterResolverImpl
 import org.jetbrains.jet.lang.resolve.java.lazy.LazyJavaResolverContext
+import org.jetbrains.jet.lang.resolve.scopes.JetScope
 
 class LazyJavaTypeResolver(
         private val c: LazyJavaResolverContext,
@@ -118,66 +119,47 @@ class LazyJavaTypeResolver(
     private inner class LazyJavaClassifierType(
             private val javaType: JavaClassifierType,
             private val howThisTypeIsUsed: TypeUsage
-    ) : JetType {
+    ) : LazyType(c.storageManager) {
 
-        private val _typeConstructor = c.storageManager.createLazyValue {
+
+        override fun computeTypeConstructor(): TypeConstructor {
             val classifier = javaType.getClassifier()
             if (classifier == null) {
-                ErrorUtils.createErrorTypeConstructor("Unresolved Java class: " + javaType.getPresentableText())
+                return ErrorUtils.createErrorTypeConstructor("Unresolved Java class: " + javaType.getPresentableText())
             }
-            else {
-                when (classifier) {
-                    is JavaClass -> {
-                        val fqName = classifier.getFqName()
-                                .sure("Class type should have a FQ name: " + classifier)
-                        val classData = JavaToKotlinClassMap.getInstance().mapKotlinClass(fqName, howThisTypeIsUsed)
-                                        ?: c.javaClassResolver.resolveClass(classifier)
+            return when (classifier) {
+                is JavaClass -> {
+                    val fqName = classifier.getFqName()
+                            .sure("Class type should have a FQ name: " + classifier)
+                    val classData = JavaToKotlinClassMap.getInstance().mapKotlinClass(fqName, howThisTypeIsUsed)
+                                    ?: c.javaClassResolver.resolveClass(classifier)
 
-                        classData?.getTypeConstructor()
-                            ?: ErrorUtils.createErrorTypeConstructor("Unresolved Java class: " + javaType.getPresentableText())
-                    }
-                    is JavaTypeParameter -> {
-                        typeParameterResolver.resolveTypeParameter(classifier)?.getTypeConstructor()
-                            ?: ErrorUtils.createErrorTypeConstructor("Unresolved Java type parameter: " + javaType.getPresentableText())
-                    }
-                    else -> throw IllegalStateException("Unknown classifier kind: $classifier")
+                    classData?.getTypeConstructor()
+                        ?: ErrorUtils.createErrorTypeConstructor("Unresolved Java class: " + javaType.getPresentableText())
                 }
+                is JavaTypeParameter -> {
+                    typeParameterResolver.resolveTypeParameter(classifier)?.getTypeConstructor()
+                        ?: ErrorUtils.createErrorTypeConstructor("Unresolved Java type parameter: " + javaType.getPresentableText())
+                }
+                else -> throw IllegalStateException("Unknown classifier kind: $classifier")
             }
         }
 
-        override fun getConstructor(): TypeConstructor = _typeConstructor()
-
-        private val _arguments by c.storageManager.createLazyValue {
+        override fun computeArguments(): List<TypeProjection> {
             var howTheProjectionIsUsed = howThisTypeIsUsed.eq(SUPERTYPE).iif(SUPERTYPE_ARGUMENT, TYPE_ARGUMENT)
-            javaType.getTypeArguments().withIndices().map {
+            return javaType.getTypeArguments().withIndices().map {
                 p ->
                 val (i, t) = p
-                transformToTypeProjection(t, howTheProjectionIsUsed, _typeConstructor, i)
+                transformToTypeProjection(t, howTheProjectionIsUsed, {getConstructor()}, i)
             }.toList()
         }
 
-        override fun getArguments(): List<TypeProjection> = _arguments
-
-        private val _memberScope = c.storageManager.createLazyValue {
+        override fun computeMemberScope(): JetScope {
             val descriptor = getConstructor().getDeclarationDescriptor()!!
 
             if (descriptor is TypeParameterDescriptor) descriptor.getDefaultType().getMemberScope()
 
-            (descriptor as ClassDescriptor).getMemberScope(getArguments())
+            return (descriptor as ClassDescriptor).getMemberScope(getArguments())
         }
-
-        override fun getMemberScope() = _memberScope()
-
-        override fun isNullable() = false
-
-        override fun isError() = false
-
-        override fun getAnnotations() = emptyList<AnnotationDescriptor>()
-
-        override fun equals(o: Any?): Boolean = TypeUtils.equals(this, o)
-
-        override fun hashCode() = TypeUtils.hashCode(this)
-
-        override fun toString() = TypeUtils.toString(this)
     }
 }
