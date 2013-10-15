@@ -17,7 +17,6 @@
 package org.jetbrains.jet.lang.resolve.java.lazy.descriptors
 
 import org.jetbrains.jet.lang.descriptors.impl.AbstractLazyTypeParameterDescriptor
-import org.jetbrains.jet.storage.StorageManager
 import org.jetbrains.jet.lang.descriptors.DeclarationDescriptor
 import org.jetbrains.jet.lang.types.Variance
 import org.jetbrains.jet.lang.types.JetType
@@ -25,14 +24,15 @@ import org.jetbrains.jet.lang.resolve.java.structure.JavaTypeParameter
 import org.jetbrains.jet.lang.types.lang.KotlinBuiltIns
 import org.jetbrains.jet.lang.resolve.java.lazy.types.LazyJavaTypeResolver
 import org.jetbrains.jet.lang.resolve.java.resolver.TypeUsage
+import org.jetbrains.jet.lang.resolve.java.lazy.LazyJavaResolverContext
 
 class LazyJavaTypeParameterDescriptor(
         public val javaTypeParameter: JavaTypeParameter,
         private val typeResolver: LazyJavaTypeResolver
-        storageManager: StorageManager,
+        c: LazyJavaResolverContext,
         containingDeclaration: DeclarationDescriptor
 ) : AbstractLazyTypeParameterDescriptor(
-        storageManager,
+        c.storageManager,
         containingDeclaration,
         name = javaTypeParameter.getName(),
         variance = Variance.INVARIANT,

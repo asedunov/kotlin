@@ -1,22 +1,20 @@
 package org.jetbrains.jet.lang.resolve.java.lazy.descriptors
 
-import com.google.common.collect.Lists
 import org.jetbrains.jet.lang.descriptors.*
 import org.jetbrains.jet.lang.resolve.java.JavaClassFinder
 import org.jetbrains.jet.storage.NotNullLazyValue
-import org.jetbrains.jet.storage.StorageManager
 import org.jetbrains.jet.lang.resolve.name.LabelName
 import org.jetbrains.jet.lang.resolve.name.Name
 import org.jetbrains.jet.lang.resolve.scopes.JetScope
-import java.util.Collections
 import org.jetbrains.jet.utils.emptyList
+import org.jetbrains.jet.lang.resolve.java.lazy.LazyJavaResolverContext
 
 public abstract class LazyJavaMemberScope(
         private val _containingDeclaration: DeclarationDescriptor, 
-        protected val storageManager: StorageManager, 
+        protected val c: LazyJavaResolverContext,
         protected val finder: JavaClassFinder
 ) : JetScope {
-    private val allDescriptors: NotNullLazyValue<MutableCollection<DeclarationDescriptor>> = storageManager.createLazyValue{computeAllDescriptors()}
+    private val allDescriptors: NotNullLazyValue<MutableCollection<DeclarationDescriptor>> = c.storageManager.createLazyValue{computeAllDescriptors()}
 
     override fun getContainingDeclaration() = _containingDeclaration
 

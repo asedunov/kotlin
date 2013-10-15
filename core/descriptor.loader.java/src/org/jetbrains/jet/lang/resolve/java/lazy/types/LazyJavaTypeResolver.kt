@@ -37,22 +37,20 @@ import org.jetbrains.jet.lang.types.lang.KotlinBuiltIns
 import org.jetbrains.jet.lang.resolve.java.structure.JavaTypeParameter
 import org.jetbrains.jet.lang.resolve.java.structure.JavaClass
 import org.jetbrains.kotlin.util.sure
-import org.jetbrains.jet.lang.resolve.java.lazy.LazyJavaClassResolver
 import org.jetbrains.jet.lang.resolve.java.lazy.TypeParameterResolver
 import org.jetbrains.jet.lang.resolve.java.lazy.descriptors.LazyJavaTypeParameterDescriptor
 import org.jetbrains.jet.lang.resolve.java.lazy.TypeParameterResolverImpl
+import org.jetbrains.jet.lang.resolve.java.lazy.LazyJavaResolverContext
 
 class LazyJavaTypeResolver(
-        private val storageManager: StorageManager,
-        private val javaClassResolver: LazyJavaClassResolver,
+        private val c: LazyJavaResolverContext,
         private val typeParameterResolver: TypeParameterResolver
 ) {
     private val NOT_NULL_POSITIONS = setOf(TYPE_ARGUMENT, UPPER_BOUND, SUPERTYPE_ARGUMENT, SUPERTYPE)
 
 
     public fun child(additionalTypeParameters: Collection<LazyJavaTypeParameterDescriptor>): LazyJavaTypeResolver {
-        return LazyJavaTypeResolver(storageManager, javaClassResolver,
-                                    TypeParameterResolverImpl(additionalTypeParameters, typeParameterResolver))
+        return LazyJavaTypeResolver(c, TypeParameterResolverImpl(additionalTypeParameters, typeParameterResolver))
     }
 
     public fun transformJavaType(javaType: JavaType, howThisTypeIsUsed: TypeUsage): JetType {
@@ -97,7 +95,7 @@ class LazyJavaTypeResolver(
             is JavaWildcardType -> {
                 val bound = javaType.getBound()
                 if (bound == null)
-                    LazyStarProjection(storageManager, typeConstructorBeingApplied, typeParameterIndex)
+                    LazyStarProjection(c, typeConstructorBeingApplied, typeParameterIndex)
                 else {
                     TypeProjectionImpl(javaType.isExtends().iif(OUT_VARIANCE, IN_VARIANCE), transformJavaType(bound, UPPER_BOUND))
                 }
@@ -107,11 +105,11 @@ class LazyJavaTypeResolver(
     }
 
     private class LazyStarProjection(
-            storageManager: StorageManager,
+            c: LazyJavaResolverContext,
             typeConstructor: () -> TypeConstructor,
             typeParameterIndex: Int
     ) : TypeProjectionBase() {
-        private val typeParameter by storageManager.createLazyValue {typeConstructor().getParameters()[typeParameterIndex]}
+        private val typeParameter by c.storageManager.createLazyValue {typeConstructor().getParameters()[typeParameterIndex]}
 
         override fun getProjectionKind() = typeParameter.getVariance().eq(OUT_VARIANCE).iif(INVARIANT, OUT_VARIANCE)
         override fun getType() = typeParameter.getUpperBoundsAsType()
@@ -122,7 +120,7 @@ class LazyJavaTypeResolver(
             private val howThisTypeIsUsed: TypeUsage
     ) : JetType {
 
-        private val _typeConstructor = storageManager.createLazyValue {
+        private val _typeConstructor = c.storageManager.createLazyValue {
             val classifier = javaType.getClassifier()
             if (classifier == null) {
                 ErrorUtils.createErrorTypeConstructor("Unresolved Java class: " + javaType.getPresentableText())
@@ -133,7 +131,7 @@ class LazyJavaTypeResolver(
                         val fqName = classifier.getFqName()
                                 .sure("Class type should have a FQ name: " + classifier)
                         val classData = JavaToKotlinClassMap.getInstance().mapKotlinClass(fqName, howThisTypeIsUsed)
-                                        ?: javaClassResolver.resolveClass(classifier)
+                                        ?: c.javaClassResolver.resolveClass(classifier)
 
                         classData?.getTypeConstructor()
                             ?: ErrorUtils.createErrorTypeConstructor("Unresolved Java class: " + javaType.getPresentableText())
@@ -149,7 +147,7 @@ class LazyJavaTypeResolver(
 
         override fun getConstructor(): TypeConstructor = _typeConstructor()
 
-        private val _arguments by storageManager.createLazyValue {
+        private val _arguments by c.storageManager.createLazyValue {
             var howTheProjectionIsUsed = howThisTypeIsUsed.eq(SUPERTYPE).iif(SUPERTYPE_ARGUMENT, TYPE_ARGUMENT)
             javaType.getTypeArguments().withIndices().map {
                 p ->
@@ -160,7 +158,7 @@ class LazyJavaTypeResolver(
 
         override fun getArguments(): List<TypeProjection> = _arguments
 
-        private val _memberScope = storageManager.createLazyValue {
+        private val _memberScope = c.storageManager.createLazyValue {
             val descriptor = getConstructor().getDeclarationDescriptor()!!
 
             if (descriptor is TypeParameterDescriptor) descriptor.getDefaultType().getMemberScope()

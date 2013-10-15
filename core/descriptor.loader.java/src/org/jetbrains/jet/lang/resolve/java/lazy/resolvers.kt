@@ -22,8 +22,6 @@ import org.jetbrains.jet.lang.descriptors.TypeParameterDescriptor
 import org.jetbrains.jet.lang.resolve.java.structure.JavaTypeParameter
 import org.jetbrains.jet.utils.toMap
 import org.jetbrains.jet.lang.resolve.java.lazy.descriptors.LazyJavaTypeParameterDescriptor
-import org.jetbrains.jet.storage.LockBasedStorageManager
-import org.jetbrains.jet.storage.StorageManager
 import org.jetbrains.jet.lang.descriptors.DeclarationDescriptor
 import org.jetbrains.jet.lang.resolve.java.lazy.types.LazyJavaTypeResolver
 
@@ -54,19 +52,19 @@ class TypeParameterResolverImpl(
 }
 
 class LazyJavaTypeParameterResolver(
-        storageManager: LockBasedStorageManager,
+        c: LazyJavaResolverContext,
         private val containingDeclaration: DeclarationDescriptor,
-        private val _typeParameters: (JavaTypeParameter) -> Boolean,
+        private val typeParameters: (JavaTypeParameter) -> Boolean,
         private val parent: TypeParameterResolver = TypeParameterResolver.EMPTY
 ) : TypeParameterResolver {
 
-    private val resolve: (JavaTypeParameter) -> TypeParameterDescriptor? = storageManager.createMemoizedFunctionWithNullableValues {
+    private val resolve: (JavaTypeParameter) -> TypeParameterDescriptor? = c.storageManager.createMemoizedFunctionWithNullableValues {
                 javaTypeParameter ->
-                if (_typeParameters(javaTypeParameter))
+                if (typeParameters(javaTypeParameter))
                     LazyJavaTypeParameterDescriptor(
                             javaTypeParameter,
-                            LazyJavaTypeResolver(storageManager, javaClassResolver, this),
-                            storageManager,
+                            LazyJavaTypeResolver(c, this),
+                            c,
                             containingDeclaration
                     )
                 else null

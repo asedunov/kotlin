@@ -6,10 +6,10 @@ import org.jetbrains.jet.lang.descriptors.impl.NamespaceDescriptorParent
 import org.jetbrains.jet.lang.resolve.name.FqName
 import org.jetbrains.jet.utils.emptyList
 import org.jetbrains.jet.lang.resolve.java.JavaClassFinder
-import org.jetbrains.jet.storage.StorageManager
+import org.jetbrains.jet.lang.resolve.java.lazy.LazyJavaResolverContext
 
 public class LazyJavaPackageFragment(
-        storageManager: StorageManager,
+        c: LazyJavaResolverContext,
         containingDeclaration: NamespaceDescriptorParent,
         finder: JavaClassFinder,
         private val _fqName: FqName
@@ -19,7 +19,7 @@ public class LazyJavaPackageFragment(
         _fqName.shortName()
     ), NamespaceDescriptor, LazyJavaDescriptor {
 
-    private val _memberScope = LazyJavaPackageFragmentScope(this, storageManager, finder)
+    private val _memberScope = LazyJavaPackageFragmentScope(this, c, finder)
 
     override fun getMemberScope() = _memberScope
     override fun getFqName() = _fqName

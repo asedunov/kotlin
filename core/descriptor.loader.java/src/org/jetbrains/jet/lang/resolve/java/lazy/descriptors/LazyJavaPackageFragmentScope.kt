@@ -3,24 +3,23 @@ package org.jetbrains.jet.lang.resolve.java.lazy.descriptors
 import org.jetbrains.jet.lang.descriptors.*
 import org.jetbrains.jet.lang.resolve.DescriptorUtils
 import org.jetbrains.jet.lang.resolve.java.JavaClassFinder
-import org.jetbrains.jet.storage.StorageManager
 import org.jetbrains.jet.lang.resolve.name.Name
 import java.util.Collections
-import org.jetbrains.jet.lang.resolve.name.FqName
+import org.jetbrains.jet.lang.resolve.java.lazy.LazyJavaResolverContext
 
 public class LazyJavaPackageFragmentScope(
-        containingDeclaration: NamespaceDescriptor, storageManager: StorageManager, finder: JavaClassFinder
-) : LazyJavaMemberScope(containingDeclaration, storageManager, finder) {
+        containingDeclaration: NamespaceDescriptor, c: LazyJavaResolverContext, finder: JavaClassFinder
+) : LazyJavaMemberScope(containingDeclaration, c, finder) {
     
     private val fqName = DescriptorUtils.getFQName(containingDeclaration).toSafe()
-    private val classes = storageManager.createMemoizedFunctionWithNullableValues<Name, ClassDescriptor> {
+    private val classes = c.storageManager.createMemoizedFunctionWithNullableValues<Name, ClassDescriptor> {
                 name ->
                 val fqName = fqName.child(name)
                 val javaClass = finder.findClass(fqName)
                 if (javaClass == null)
                     null
                 else
-                    LazyJavaClassDescriptor(storageManager, containingDeclaration, fqName, javaClass)
+                    LazyJavaClassDescriptor(c, containingDeclaration, fqName, javaClass)
             }
 
     override fun getAllClassNames(): Collection<Name> {

@@ -1,6 +1,5 @@
 package org.jetbrains.jet.lang.resolve.java.lazy.descriptors
 
-import org.jetbrains.jet.storage.StorageManager
 import org.jetbrains.jet.lang.resolve.name.FqName
 import org.jetbrains.jet.lang.resolve.java.structure.JavaClass
 import org.jetbrains.jet.lang.descriptors.DeclarationDescriptor
@@ -17,10 +16,11 @@ import org.jetbrains.jet.lang.descriptors.TypeParameterDescriptor
 import org.jetbrains.jet.lang.resolve.DescriptorFactory
 import java.util.Collections
 import org.jetbrains.jet.lang.resolve.java.lazy.types.LazyJavaTypeResolver
+import org.jetbrains.jet.lang.resolve.java.lazy.LazyJavaResolverContext
 import org.jetbrains.jet.lang.resolve.java.lazy.LazyJavaTypeParameterResolver
 
 class LazyJavaClassDescriptor(
-        private val storageManager: StorageManager,
+        private val c: LazyJavaResolverContext,
         private val typeResolver: LazyJavaTypeResolver,
         containingDeclaration: DeclarationDescriptor,
         fqName: FqName,
@@ -37,17 +37,17 @@ class LazyJavaClassDescriptor(
     override fun getVisibility() = _visibility
     override fun isInner() = _isInner
 
-    private val _typeConstructor = storageManager.createLazyValue { LazyJavaClassTypeConstructor() }
+    private val _typeConstructor = c.storageManager.createLazyValue { LazyJavaClassTypeConstructor() }
     override fun getTypeConstructor() = _typeConstructor()
 
-    private val _scopeForMemberLookup = storageManager.createLazyValue {
+    private val _scopeForMemberLookup = c.storageManager.createLazyValue {
         // TODO
         throw UnsupportedOperationException()
     }
 
     override fun getScopeForMemberLookup() = _scopeForMemberLookup()
 
-    private val _thisAsReceiverParameter = storageManager.createLazyValue { DescriptorFactory.createLazyReceiverParameterDescriptor(this) }
+    private val _thisAsReceiverParameter = c.storageManager.createLazyValue { DescriptorFactory.createLazyReceiverParameterDescriptor(this) }
     override fun getThisAsReceiverParameter() = _thisAsReceiverParameter()
 
     // TODO
@@ -69,9 +69,9 @@ class LazyJavaClassDescriptor(
 
     private inner class LazyJavaClassTypeConstructor : TypeConstructor {
 
-        //private val parameters = storageManager.createLazyValue {
-        //    LazyJavaTypeParameterResolver(storageManager, this@LazyJavaClassDescriptor, predicate, )
-        //}
+        private val parameters = c.storageManager.createLazyValue {
+            LazyJavaTypeParameterResolver(c, this@LazyJavaClassDescriptor, predicate, )
+        }
 
         override fun getParameters(): List<TypeParameterDescriptor> {
             // TODO
