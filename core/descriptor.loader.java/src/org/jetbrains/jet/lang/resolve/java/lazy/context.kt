@@ -17,8 +17,31 @@
 package org.jetbrains.jet.lang.resolve.java.lazy
 
 import org.jetbrains.jet.storage.StorageManager
+import org.jetbrains.jet.lang.resolve.java.lazy.types.LazyJavaTypeResolver
+import org.jetbrains.jet.lang.descriptors.DeclarationDescriptor
+import org.jetbrains.jet.lang.resolve.java.structure.JavaTypeParameter
 
-class LazyJavaResolverContext(
+open class LazyJavaResolverContext(
         val storageManager: StorageManager,
         val javaClassResolver: LazyJavaClassResolver
 )
+
+fun LazyJavaResolverContext.withTypes(
+        typeParameterResolver: TypeParameterResolver
+)  =  LazyJavaResolverContextWithTypes(
+        storageManager,
+        javaClassResolver,
+        LazyJavaTypeResolver(this, typeParameterResolver),
+        typeParameterResolver)
+
+class LazyJavaResolverContextWithTypes(
+        storageManager: StorageManager,
+        javaClassResolver: LazyJavaClassResolver,
+        val typeResolver: LazyJavaTypeResolver,
+        val typeParameterResolver: TypeParameterResolver
+) : LazyJavaResolverContext(storageManager, javaClassResolver)
+
+fun LazyJavaResolverContextWithTypes.child(
+        containingDeclaration: DeclarationDescriptor,
+        typeParameters: Set<JavaTypeParameter>
+): LazyJavaResolverContextWithTypes = this.withTypes(LazyJavaTypeParameterResolver(this, containingDeclaration, typeParameters))

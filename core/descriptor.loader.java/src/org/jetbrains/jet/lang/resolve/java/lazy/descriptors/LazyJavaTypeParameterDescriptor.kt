@@ -24,12 +24,11 @@ import org.jetbrains.jet.lang.resolve.java.structure.JavaTypeParameter
 import org.jetbrains.jet.lang.types.lang.KotlinBuiltIns
 import org.jetbrains.jet.lang.resolve.java.lazy.types.LazyJavaTypeResolver
 import org.jetbrains.jet.lang.resolve.java.resolver.TypeUsage
-import org.jetbrains.jet.lang.resolve.java.lazy.LazyJavaResolverContext
+import org.jetbrains.jet.lang.resolve.java.lazy.LazyJavaResolverContextWithTypes
 
 class LazyJavaTypeParameterDescriptor(
+        private val c: LazyJavaResolverContextWithTypes,
         public val javaTypeParameter: JavaTypeParameter,
-        private val typeResolver: LazyJavaTypeResolver
-        c: LazyJavaResolverContext,
         containingDeclaration: DeclarationDescriptor
 ) : AbstractLazyTypeParameterDescriptor(
         c.storageManager,
@@ -47,7 +46,7 @@ class LazyJavaTypeParameterDescriptor(
         }
         else {
             return bounds.map {
-                javaType -> typeResolver.transformJavaType(javaType, TypeUsage.UPPER_BOUND)
+                javaType -> c.typeResolver.transformJavaType(javaType, TypeUsage.UPPER_BOUND)
             }.toSet()
         }
     }

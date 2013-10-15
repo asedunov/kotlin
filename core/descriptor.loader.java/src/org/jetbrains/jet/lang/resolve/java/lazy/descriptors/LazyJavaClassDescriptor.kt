@@ -13,24 +13,24 @@ import org.jetbrains.jet.lang.descriptors.annotations.AnnotationDescriptor
 import org.jetbrains.jet.lang.resolve.java.resolver.JavaClassResolver
 import org.jetbrains.jet.utils.emptyOrSingletonList
 import org.jetbrains.jet.lang.descriptors.TypeParameterDescriptor
-import org.jetbrains.jet.lang.resolve.DescriptorFactory
 import java.util.Collections
-import org.jetbrains.jet.lang.resolve.java.lazy.types.LazyJavaTypeResolver
-import org.jetbrains.jet.lang.resolve.java.lazy.LazyJavaResolverContext
-import org.jetbrains.jet.lang.resolve.java.lazy.LazyJavaTypeParameterResolver
+import org.jetbrains.jet.lang.resolve.java.lazy.LazyJavaResolverContextWithTypes
+import org.jetbrains.jet.lang.resolve.DescriptorFactory
+import org.jetbrains.jet.lang.resolve.java.lazy.child
 
 class LazyJavaClassDescriptor(
-        private val c: LazyJavaResolverContext,
-        private val typeResolver: LazyJavaTypeResolver,
+        private val c: LazyJavaResolverContextWithTypes,
         containingDeclaration: DeclarationDescriptor,
         fqName: FqName,
-        private val javaClass: JavaClass
+        private val jClass: JavaClass
 ) : ClassDescriptorBase(containingDeclaration, fqName.shortName()), LazyJavaDescriptor {
 
-    private val _kind = JavaClassResolver.determineClassKind(javaClass)
-    private val _modality = JavaClassResolver.determineClassModality(javaClass)
-    private val _visibility = javaClass.getVisibility()
-    private val _isInner = JavaClassResolver.isInnerClass(javaClass)
+    private val innerC: LazyJavaResolverContextWithTypes = c.child(this, jClass.getTypeParameters().toSet())
+
+    private val _kind = JavaClassResolver.determineClassKind(jClass)
+    private val _modality = JavaClassResolver.determineClassModality(jClass)
+    private val _visibility = jClass.getVisibility()
+    private val _isInner = JavaClassResolver.isInnerClass(jClass)
 
     override fun getKind() = _kind
     override fun getModality() = _modality
@@ -69,14 +69,15 @@ class LazyJavaClassDescriptor(
 
     private inner class LazyJavaClassTypeConstructor : TypeConstructor {
 
-        private val parameters = c.storageManager.createLazyValue {
-            LazyJavaTypeParameterResolver(c, this@LazyJavaClassDescriptor, predicate, )
+        private val _parameters = c.storageManager.createLazyValue {
+            this@LazyJavaClassDescriptor.jClass.getTypeParameters().map {
+                p ->
+                innerC.typeParameterResolver.resolveTypeParameter(p)
+                    ?: throw AssertionError("Parameter $p surely belongs to class $jClass, so it must be resolved")
+            }
         }
 
-        override fun getParameters(): List<TypeParameterDescriptor> {
-            // TODO
-            throw UnsupportedOperationException()
-        }
+        override fun getParameters(): List<TypeParameterDescriptor> = _parameters()
 
         override fun getSupertypes(): Collection<JetType> {
             // TODO

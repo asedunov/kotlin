@@ -6,6 +6,8 @@ import org.jetbrains.jet.lang.resolve.java.JavaClassFinder
 import org.jetbrains.jet.lang.resolve.name.Name
 import java.util.Collections
 import org.jetbrains.jet.lang.resolve.java.lazy.LazyJavaResolverContext
+import org.jetbrains.jet.lang.resolve.java.lazy.withTypes
+import org.jetbrains.jet.lang.resolve.java.lazy.TypeParameterResolver
 
 public class LazyJavaPackageFragmentScope(
         containingDeclaration: NamespaceDescriptor, c: LazyJavaResolverContext, finder: JavaClassFinder
@@ -19,7 +21,7 @@ public class LazyJavaPackageFragmentScope(
                 if (javaClass == null)
                     null
                 else
-                    LazyJavaClassDescriptor(c, containingDeclaration, fqName, javaClass)
+                    LazyJavaClassDescriptor(c.withTypes(TypeParameterResolver.EMPTY), containingDeclaration, fqName, javaClass)
             }
 
     override fun getAllClassNames(): Collection<Name> {

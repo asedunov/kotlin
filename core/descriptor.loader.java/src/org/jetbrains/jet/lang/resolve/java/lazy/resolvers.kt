@@ -52,25 +52,23 @@ class TypeParameterResolverImpl(
 }
 
 class LazyJavaTypeParameterResolver(
-        c: LazyJavaResolverContext,
+        val c: LazyJavaResolverContextWithTypes,
         private val containingDeclaration: DeclarationDescriptor,
-        private val typeParameters: (JavaTypeParameter) -> Boolean,
-        private val parent: TypeParameterResolver = TypeParameterResolver.EMPTY
+        private val typeParameters: Set<JavaTypeParameter>
 ) : TypeParameterResolver {
 
     private val resolve: (JavaTypeParameter) -> TypeParameterDescriptor? = c.storageManager.createMemoizedFunctionWithNullableValues {
                 javaTypeParameter ->
-                if (typeParameters(javaTypeParameter))
+                if (javaTypeParameter in typeParameters)
                     LazyJavaTypeParameterDescriptor(
-                            javaTypeParameter,
-                            LazyJavaTypeResolver(c, this),
                             c,
+                            javaTypeParameter,
                             containingDeclaration
                     )
                 else null
             }
 
     override fun resolveTypeParameter(javaTypeParameter: JavaTypeParameter): TypeParameterDescriptor? {
-        return resolve(javaTypeParameter) ?: parent.resolveTypeParameter(javaTypeParameter)
+        return resolve(javaTypeParameter) ?: c.typeParameterResolver.resolveTypeParameter(javaTypeParameter)
     }
 }
