@@ -1,7 +1,6 @@
 package org.jetbrains.jet.lang.resolve.java.lazy.descriptors
 
 import org.jetbrains.jet.lang.descriptors.*
-import org.jetbrains.jet.lang.resolve.java.JavaClassFinder
 import org.jetbrains.jet.storage.NotNullLazyValue
 import org.jetbrains.jet.lang.resolve.name.LabelName
 import org.jetbrains.jet.lang.resolve.name.Name
@@ -11,8 +10,7 @@ import org.jetbrains.jet.lang.resolve.java.lazy.LazyJavaResolverContext
 
 public abstract class LazyJavaMemberScope(
         private val _containingDeclaration: DeclarationDescriptor, 
-        protected val c: LazyJavaResolverContext,
-        protected val finder: JavaClassFinder
+        protected val c: LazyJavaResolverContext
 ) : JetScope {
     private val allDescriptors: NotNullLazyValue<MutableCollection<DeclarationDescriptor>> = c.storageManager.createLazyValue{computeAllDescriptors()}
 

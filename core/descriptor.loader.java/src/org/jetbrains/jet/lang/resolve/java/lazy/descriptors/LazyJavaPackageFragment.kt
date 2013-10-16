@@ -11,7 +11,6 @@ import org.jetbrains.jet.lang.resolve.java.lazy.LazyJavaResolverContext
 public class LazyJavaPackageFragment(
         c: LazyJavaResolverContext,
         containingDeclaration: NamespaceDescriptorParent,
-        finder: JavaClassFinder,
         private val _fqName: FqName
 ) : AbstractNamespaceDescriptorImpl(
         containingDeclaration,
@@ -19,7 +18,7 @@ public class LazyJavaPackageFragment(
         _fqName.shortName()
     ), NamespaceDescriptor, LazyJavaDescriptor {
 
-    private val _memberScope = LazyJavaPackageFragmentScope(this, c, finder)
+    private val _memberScope = LazyJavaPackageFragmentScope(this, c)
 
     override fun getMemberScope() = _memberScope
     override fun getFqName() = _fqName

@@ -10,14 +10,14 @@ import org.jetbrains.jet.lang.resolve.java.lazy.withTypes
 import org.jetbrains.jet.lang.resolve.java.lazy.TypeParameterResolver
 
 public class LazyJavaPackageFragmentScope(
-        containingDeclaration: NamespaceDescriptor, c: LazyJavaResolverContext, finder: JavaClassFinder
-) : LazyJavaMemberScope(containingDeclaration, c, finder) {
+        containingDeclaration: NamespaceDescriptor, c: LazyJavaResolverContext
+) : LazyJavaMemberScope(containingDeclaration, c) {
     
     private val fqName = DescriptorUtils.getFQName(containingDeclaration).toSafe()
     private val classes = c.storageManager.createMemoizedFunctionWithNullableValues<Name, ClassDescriptor> {
                 name ->
                 val fqName = fqName.child(name)
-                val javaClass = finder.findClass(fqName)
+                val javaClass = c.finder.findClass(fqName)
                 if (javaClass == null)
                     null
                 else
@@ -25,7 +25,7 @@ public class LazyJavaPackageFragmentScope(
             }
 
     override fun getAllClassNames(): Collection<Name> {
-        val javaPackage = finder.findPackage(fqName)
+        val javaPackage = c.finder.findPackage(fqName)
         assert(javaPackage != null) { "Package not found:  $fqName" }
         return javaPackage!!.getClasses().map { c -> c.getName() }
     }

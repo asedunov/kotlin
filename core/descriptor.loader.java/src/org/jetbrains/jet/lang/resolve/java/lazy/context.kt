@@ -20,9 +20,11 @@ import org.jetbrains.jet.storage.StorageManager
 import org.jetbrains.jet.lang.resolve.java.lazy.types.LazyJavaTypeResolver
 import org.jetbrains.jet.lang.descriptors.DeclarationDescriptor
 import org.jetbrains.jet.lang.resolve.java.structure.JavaTypeParameter
+import org.jetbrains.jet.lang.resolve.java.JavaClassFinder
 
 open class LazyJavaResolverContext(
         val storageManager: StorageManager,
+        val finder: JavaClassFinder,
         val javaClassResolver: LazyJavaClassResolver
 )
 
@@ -30,16 +32,18 @@ fun LazyJavaResolverContext.withTypes(
         typeParameterResolver: TypeParameterResolver
 )  =  LazyJavaResolverContextWithTypes(
         storageManager,
+        finder,
         javaClassResolver,
         LazyJavaTypeResolver(this, typeParameterResolver),
         typeParameterResolver)
 
 class LazyJavaResolverContextWithTypes(
         storageManager: StorageManager,
+        finder: JavaClassFinder,
         javaClassResolver: LazyJavaClassResolver,
         val typeResolver: LazyJavaTypeResolver,
         val typeParameterResolver: TypeParameterResolver
-) : LazyJavaResolverContext(storageManager, javaClassResolver)
+) : LazyJavaResolverContext(storageManager, finder, javaClassResolver)
 
 fun LazyJavaResolverContextWithTypes.child(
         containingDeclaration: DeclarationDescriptor,
