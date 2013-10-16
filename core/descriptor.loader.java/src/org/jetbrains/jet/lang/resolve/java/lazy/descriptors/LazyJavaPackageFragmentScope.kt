@@ -2,7 +2,6 @@ package org.jetbrains.jet.lang.resolve.java.lazy.descriptors
 
 import org.jetbrains.jet.lang.descriptors.*
 import org.jetbrains.jet.lang.resolve.DescriptorUtils
-import org.jetbrains.jet.lang.resolve.java.JavaClassFinder
 import org.jetbrains.jet.lang.resolve.name.Name
 import java.util.Collections
 import org.jetbrains.jet.lang.resolve.java.lazy.LazyJavaResolverContext
@@ -10,9 +9,9 @@ import org.jetbrains.jet.lang.resolve.java.lazy.withTypes
 import org.jetbrains.jet.lang.resolve.java.lazy.TypeParameterResolver
 
 public class LazyJavaPackageFragmentScope(
-        c: LazyJavaResolverContext,
+        private val c: LazyJavaResolverContext,
         containingDeclaration: NamespaceDescriptor
-) : LazyJavaMemberScope(c, containingDeclaration) {
+) : LazyJavaMemberScope(c.withTypes(), containingDeclaration) {
     
     private val fqName = DescriptorUtils.getFQName(containingDeclaration).toSafe()
     private val classes = c.storageManager.createMemoizedFunctionWithNullableValues<Name, ClassDescriptor> {
