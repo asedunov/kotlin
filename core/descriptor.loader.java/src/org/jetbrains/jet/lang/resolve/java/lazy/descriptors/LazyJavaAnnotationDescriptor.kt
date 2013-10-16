@@ -27,7 +27,6 @@ import org.jetbrains.jet.lang.types.TypeProjection
 import org.jetbrains.jet.lang.resolve.scopes.JetScope
 import org.jetbrains.jet.lang.resolve.java.lazy.types.LazyType
 import org.jetbrains.jet.utils.valuesToMap
-import org.jetbrains.jet.utils.toMapExceptNulls
 import org.jetbrains.jet.utils.keysToMap
 import org.jetbrains.jet.utils.keysToMapExceptNulls
 
