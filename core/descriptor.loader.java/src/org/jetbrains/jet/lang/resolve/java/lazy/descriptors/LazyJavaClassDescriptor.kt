@@ -63,9 +63,8 @@ class LazyJavaClassDescriptor(
 
     override fun getClassObjectDescriptor(): ClassDescriptor? = null
 
-    override fun getAnnotations(): List<AnnotationDescriptor> = jClass.getAnnotations().map {
-        jAnnotation -> LazyJavaAnnotationDescriptor(c, jAnnotation)
-    }
+    private val _annotations = jClass.getAnnotations().map {jAnnotation -> LazyJavaAnnotationDescriptor(c, jAnnotation)}
+    override fun getAnnotations(): List<AnnotationDescriptor> = _annotations
 
     private inner class LazyJavaClassTypeConstructor : TypeConstructor {
 
