@@ -10,8 +10,9 @@ import org.jetbrains.jet.lang.resolve.java.lazy.withTypes
 import org.jetbrains.jet.lang.resolve.java.lazy.TypeParameterResolver
 
 public class LazyJavaPackageFragmentScope(
-        containingDeclaration: NamespaceDescriptor, c: LazyJavaResolverContext
-) : LazyJavaMemberScope(containingDeclaration, c) {
+        c: LazyJavaResolverContext,
+        containingDeclaration: NamespaceDescriptor
+) : LazyJavaMemberScope(c, containingDeclaration) {
     
     private val fqName = DescriptorUtils.getFQName(containingDeclaration).toSafe()
     private val classes = c.storageManager.createMemoizedFunctionWithNullableValues<Name, ClassDescriptor> {

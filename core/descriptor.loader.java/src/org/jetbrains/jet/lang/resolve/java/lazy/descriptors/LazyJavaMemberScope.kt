@@ -9,8 +9,8 @@ import org.jetbrains.jet.utils.emptyList
 import org.jetbrains.jet.lang.resolve.java.lazy.LazyJavaResolverContext
 
 public abstract class LazyJavaMemberScope(
-        private val _containingDeclaration: DeclarationDescriptor, 
-        protected val c: LazyJavaResolverContext
+        private val c: LazyJavaResolverContext,
+        private val _containingDeclaration: DeclarationDescriptor
 ) : JetScope {
     private val allDescriptors: NotNullLazyValue<MutableCollection<DeclarationDescriptor>> = c.storageManager.createLazyValue{computeAllDescriptors()}
 

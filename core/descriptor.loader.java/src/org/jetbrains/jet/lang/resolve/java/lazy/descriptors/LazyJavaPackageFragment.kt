@@ -18,7 +18,7 @@ public class LazyJavaPackageFragment(
         _fqName.shortName()
     ), NamespaceDescriptor, LazyJavaDescriptor {
 
-    private val _memberScope = LazyJavaPackageFragmentScope(this, c)
+    private val _memberScope = LazyJavaPackageFragmentScope(c, this)
 
     override fun getMemberScope() = _memberScope
     override fun getFqName() = _fqName
