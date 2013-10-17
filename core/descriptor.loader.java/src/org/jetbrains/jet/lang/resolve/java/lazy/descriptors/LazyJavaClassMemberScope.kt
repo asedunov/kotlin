@@ -41,7 +41,7 @@ import org.jetbrains.jet.lang.resolve.java.lazy.hasMutableAnnotation
 import org.jetbrains.kotlin.util.iif
 import org.jetbrains.jet.lang.resolve.java.lazy.hasReadOnlyAnnotation
 
-public abstract class LazyJavaClassMemberScope(
+public class LazyJavaClassMemberScope(
         c: LazyJavaResolverContextWithTypes,
         containingDeclaration: DeclarationDescriptor,
         private val jClass: JavaClass,
@@ -132,4 +132,20 @@ public abstract class LazyJavaClassMemberScope(
 
     override fun getFunctions(name: Name) = _functions(name)
     override fun getAllFunctionNames(): Collection<Name> = methodIndex().keySet()
+
+    // TODO
+    override fun getProperties(name: Name): Collection<VariableDescriptor> = listOf()
+    override fun getAllPropertyNames(): Collection<Name> = listOf()
+
+    // TODO
+    override fun getClassifier(name: Name): ClassifierDescriptor? = null
+    override fun getAllClassNames(): Collection<Name> = listOf()
+
+    override fun addExtraDescriptors(result: MutableCollection<in DeclarationDescriptor>) {
+        // TODO
+    }
+
+    // TODO
+    override fun getImplicitReceiversHierarchy(): List<ReceiverParameterDescriptor> = listOf()
+
 }
