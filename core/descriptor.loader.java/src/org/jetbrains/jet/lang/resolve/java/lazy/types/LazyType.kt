@@ -16,15 +16,14 @@
 
 package org.jetbrains.jet.lang.resolve.java.lazy.types
 
-import org.jetbrains.jet.lang.types.JetType
 import org.jetbrains.jet.storage.StorageManager
 import org.jetbrains.jet.lang.types.TypeConstructor
 import org.jetbrains.jet.lang.types.TypeProjection
 import org.jetbrains.jet.lang.descriptors.annotations.AnnotationDescriptor
 import org.jetbrains.jet.lang.resolve.scopes.JetScope
-import org.jetbrains.jet.lang.types.TypeUtils
+import org.jetbrains.jet.lang.types.AbstractJetType
 
-abstract class LazyType(storageManager: StorageManager) : JetType {
+abstract class LazyType(storageManager: StorageManager) : AbstractJetType() {
 
     private val _typeConstructor = storageManager.createLazyValue {computeTypeConstructor()}
     override fun getConstructor(): TypeConstructor = _typeConstructor()
@@ -46,10 +45,4 @@ abstract class LazyType(storageManager: StorageManager) : JetType {
     override fun isError() = false
 
     override fun getAnnotations(): List<AnnotationDescriptor> = listOf()
-
-    override fun equals(o: Any?): Boolean = TypeUtils.equals(this, o)
-
-    override fun hashCode() = TypeUtils.hashCode(this)
-
-    override fun toString() = TypeUtils.toString(this)
 }
