@@ -1374,6 +1374,11 @@ public class JetDiagnosticsTestGenerated extends AbstractDiagnosticsTestWithEage
                 doTest("compiler/testData/diagnostics/tests/classObjects/InnerClassClassObject.kt");
             }
             
+            @TestMetadata("invisibleClassObjects.kt")
+            public void testInvisibleClassObjects() throws Exception {
+                doTest("compiler/testData/diagnostics/tests/classObjects/invisibleClassObjects.kt");
+            }
+            
         }
         
         @TestMetadata("compiler/testData/diagnostics/tests/controlFlowAnalysis")
