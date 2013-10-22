@@ -201,8 +201,7 @@ public class LazyJavaClassMemberScope(
                 }
                 else null
 
-            val returnType: JetType
-            returnType = c.typeResolver.transformJavaType(jReturnType, TypeUsage.MEMBER_SIGNATURE_INVARIANT.toAttributes())
+            val returnType = c.typeResolver.transformJavaType(jReturnType, TypeUsage.MEMBER_SIGNATURE_INVARIANT.toAttributes())
 
             result.add(ValueParameterDescriptorImpl(
                     constructor,
