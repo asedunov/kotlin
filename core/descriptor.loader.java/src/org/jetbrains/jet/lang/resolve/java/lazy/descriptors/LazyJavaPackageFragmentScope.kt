@@ -39,13 +39,11 @@ public class LazyJavaPackageFragmentScope(
 
     override fun getClassifier(name: Name): ClassifierDescriptor? = classes(name)
 
-    override fun getProperties(name: Name): Collection<VariableDescriptor> {
-        throw UnsupportedOperationException()
-    }
+    // TODO
+    override fun getProperties(name: Name): Collection<VariableDescriptor> = Collections.emptyList()
 
-    override fun getFunctions(name: Name): Collection<FunctionDescriptor> {
-        throw UnsupportedOperationException()
-    }
+    // TODO
+    override fun getFunctions(name: Name): Collection<FunctionDescriptor> = Collections.emptyList()
 
     override fun getImplicitReceiversHierarchy(): List<ReceiverParameterDescriptor> = listOf()
 

@@ -25,6 +25,6 @@ fun LazyJavaResolverContextWithTypes.resolveAnnotations(javaAnnotations: Collect
         = javaAnnotations.map {jAnnotation -> LazyJavaAnnotationDescriptor(this, jAnnotation)}
 
 // TODO: These methods are a workaround for inability to refactor List<AnnotationDescriptor> -> Annotations at the moment
-fun JavaAnnotationOwner.hasMutableAnnotation(): Boolean = throw UnsupportedOperationException()
-fun JavaAnnotationOwner.hasReadOnlyAnnotation(): Boolean = throw UnsupportedOperationException()
-fun JavaAnnotationOwner.hasNotNullAnnotation(): Boolean = throw UnsupportedOperationException()
+fun JavaAnnotationOwner.hasMutableAnnotation(): Boolean = false
+fun JavaAnnotationOwner.hasReadOnlyAnnotation(): Boolean = false
+fun JavaAnnotationOwner.hasNotNullAnnotation(): Boolean = false
