@@ -40,10 +40,11 @@ import org.jetbrains.jet.lang.resolve.java.lazy.types.LazyJavaTypeAttributes
 import org.jetbrains.jet.lang.resolve.java.lazy.hasMutableAnnotation
 import org.jetbrains.kotlin.util.iif
 import org.jetbrains.jet.lang.resolve.java.lazy.hasReadOnlyAnnotation
+import org.jetbrains.jet.utils.valuesToMap
 
 public class LazyJavaClassMemberScope(
         c: LazyJavaResolverContextWithTypes,
-        containingDeclaration: DeclarationDescriptor,
+        containingDeclaration: LazyJavaClassDescriptor,
         private val jClass: JavaClass,
         classAsPackage: Boolean
 ) : LazyJavaMemberScope(c, containingDeclaration) {
@@ -137,9 +138,21 @@ public class LazyJavaClassMemberScope(
     override fun getProperties(name: Name): Collection<VariableDescriptor> = listOf()
     override fun getAllPropertyNames(): Collection<Name> = listOf()
 
-    // TODO
-    override fun getClassifier(name: Name): ClassifierDescriptor? = null
-    override fun getAllClassNames(): Collection<Name> = listOf()
+    private val nestedClassIndex = c.storageManager.createLazyValue {
+        jClass.getInnerClasses().valuesToMap { c -> c.getName() }
+    }
+
+    private val nestedClasses = c.storageManager.createMemoizedFunctionWithNullableValues {
+        (name: Name) ->
+        val jNestedClass = nestedClassIndex()[name]
+        if (jNestedClass == null)
+            null
+        else
+            LazyJavaClassDescriptor(c, getContainingDeclaration(), getContainingDeclaration().fqName.child(name), jNestedClass)
+    }
+
+    override fun getClassifier(name: Name): ClassifierDescriptor? = nestedClasses(name)
+    override fun getAllClassNames(): Collection<Name> = nestedClassIndex().keySet()
 
     override fun addExtraDescriptors(result: MutableCollection<in DeclarationDescriptor>) {
         // TODO
@@ -148,4 +161,8 @@ public class LazyJavaClassMemberScope(
     // TODO
     override fun getImplicitReceiversHierarchy(): List<ReceiverParameterDescriptor> = listOf()
 
+
+    override fun getContainingDeclaration(): LazyJavaClassDescriptor {
+        return super.getContainingDeclaration() as LazyJavaClassDescriptor
+    }
 }
