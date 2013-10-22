@@ -76,7 +76,7 @@ class LazyJavaTypeResolver(
 
         val howArgumentTypeIsUsed = isVararg.iif(MEMBER_SIGNATURE_CONTRAVARIANT, TYPE_ARGUMENT)
         val componentType = transformJavaType(javaComponentType, howArgumentTypeIsUsed.toAttributes())
-        return KotlinBuiltIns.getInstance().getArrayType(projectionKind, componentType)
+        return TypeUtils.makeNullable(KotlinBuiltIns.getInstance().getArrayType(projectionKind, componentType))
     }
 
     private fun JetType.applyNullablility(attr: JavaTypeAttributes): JetType {

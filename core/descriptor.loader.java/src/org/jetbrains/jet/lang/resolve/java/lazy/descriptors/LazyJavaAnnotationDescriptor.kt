@@ -30,6 +30,7 @@ import org.jetbrains.jet.utils.valuesToMap
 import org.jetbrains.jet.utils.keysToMap
 import org.jetbrains.jet.utils.keysToMapExceptNulls
 import org.jetbrains.jet.lang.resolve.java.lazy.types.toAttributes
+import org.jetbrains.jet.lang.resolve.java.resolver.JavaAnnotationResolver
 
 class LazyJavaAnnotationDescriptor(
         private val c: LazyJavaResolverContextWithTypes,
@@ -50,7 +51,15 @@ class LazyJavaAnnotationDescriptor(
     }
 
     private val _valueArguments = c.storageManager.createMemoizedFunctionWithNullableValues<ValueParameterDescriptor, CompileTimeConstant<out Any?>> {
-        valueParameter -> resolveAnnotationArgument(_nameToArgument()[valueParameter.getName()])
+        valueParameter ->
+        val nameToArg = _nameToArgument()
+
+        var javaAnnotationArgument = nameToArg[valueParameter.getName()]
+        if (javaAnnotationArgument == null && valueParameter.getName() == JavaAnnotationResolver.DEFAULT_ANNOTATION_MEMBER_NAME) {
+            javaAnnotationArgument = nameToArg[null]
+        }
+
+        resolveAnnotationArgument(javaAnnotationArgument)
     }
 
     override fun getValueArgument(valueParameterDescriptor: ValueParameterDescriptor) = _valueArguments(valueParameterDescriptor)
@@ -140,5 +149,11 @@ class LazyJavaAnnotationDescriptor(
         }
 
         return JavaClassValue(javaClassObjectType)
+    }
+
+
+    override fun toString(): String {
+        val annotationClassName = javaAnnotation.getFqName()?.shortName() ?: getType().getConstructor().getDeclarationDescriptor()?.getName()
+        return annotationClassName?.asString() + DescriptorUtils.getSortedValueArguments(this, null);
     }
 }
