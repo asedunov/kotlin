@@ -18,16 +18,28 @@ package org.jetbrains.jet.lang.resolve.java;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.jet.lang.PlatformToKotlinClassMap;
 import org.jetbrains.jet.lang.descriptors.ClassDescriptor;
+import org.jetbrains.jet.lang.descriptors.ModuleDescriptorImpl;
 import org.jetbrains.jet.lang.descriptors.NamespaceDescriptor;
+import org.jetbrains.jet.lang.resolve.DescriptorUtils;
+import org.jetbrains.jet.lang.resolve.ImportPath;
+import org.jetbrains.jet.lang.resolve.java.lazy.LazyJavaClassResolver;
+import org.jetbrains.jet.lang.resolve.java.lazy.LazyJavaResolverContext;
+import org.jetbrains.jet.lang.resolve.java.lazy.LazyJavaSubModule;
+import org.jetbrains.jet.lang.resolve.java.resolver.ExternalAnnotationResolver;
 import org.jetbrains.jet.lang.resolve.java.resolver.JavaClassResolver;
 import org.jetbrains.jet.lang.resolve.java.resolver.JavaNamespaceResolver;
+import org.jetbrains.jet.lang.resolve.java.structure.JavaClass;
 import org.jetbrains.jet.lang.resolve.name.FqName;
 import org.jetbrains.jet.lang.resolve.name.Name;
 import org.jetbrains.jet.lang.resolve.scopes.JetScope;
 import org.jetbrains.jet.lang.types.DependencyClassByQualifiedNameResolver;
+import org.jetbrains.jet.storage.LockBasedStorageManager;
 
 import javax.inject.Inject;
+
+import java.util.Collections;
 
 import static org.jetbrains.jet.lang.resolve.java.DescriptorSearchRule.IGNORE_KOTLIN_SOURCES;
 
@@ -36,6 +48,9 @@ public class JavaDescriptorResolver implements DependencyClassByQualifiedNameRes
 
     private JavaClassResolver classResolver;
     private JavaNamespaceResolver namespaceResolver;
+    private JavaClassFinder javaClassFinder;
+    private ExternalAnnotationResolver externalAnnotationResolver;
+    private LazyJavaSubModule subModule;
 
     @Inject
     public void setClassResolver(JavaClassResolver classResolver) {
@@ -47,9 +62,45 @@ public class JavaDescriptorResolver implements DependencyClassByQualifiedNameRes
         this.namespaceResolver = namespaceResolver;
     }
 
+    @Inject
+    public void setJavaClassFinder(JavaClassFinder javaClassFinder) {
+        this.javaClassFinder = javaClassFinder;
+    }
+
+    @Inject
+    public void setExternalAnnotationResolver(ExternalAnnotationResolver externalAnnotationResolver) {
+        this.externalAnnotationResolver = externalAnnotationResolver;
+    }
+
+    @NotNull
+    private LazyJavaSubModule getSubModule() {
+        if (subModule == null) {
+            subModule = new LazyJavaSubModule(
+                    new LazyJavaResolverContext(
+                            new LockBasedStorageManager(),
+                            javaClassFinder,
+                            new LazyJavaClassResolver() {
+                                @Override
+                                public ClassDescriptor resolveClass(JavaClass aClass) {
+                                    return null;
+                                }
+
+                                @Override
+                                public ClassDescriptor resolveClassByFqName(FqName name) {
+                                    return null;
+                                }
+                            },
+                            externalAnnotationResolver
+                    ),
+                    new ModuleDescriptorImpl(Name.special("<java module>"), Collections.<ImportPath>emptyList(), PlatformToKotlinClassMap.EMPTY)
+            );
+        }
+        return subModule;
+    }
+
     @Nullable
     public ClassDescriptor resolveClass(@NotNull FqName qualifiedName, @NotNull DescriptorSearchRule searchRule) {
-        return classResolver.resolveClass(qualifiedName, searchRule);
+        return getSubModule().getClass(qualifiedName);
     }
 
     @Override
@@ -59,11 +110,11 @@ public class JavaDescriptorResolver implements DependencyClassByQualifiedNameRes
 
     @Nullable
     public NamespaceDescriptor resolveNamespace(@NotNull FqName qualifiedName, @NotNull DescriptorSearchRule searchRule) {
-        return namespaceResolver.resolveNamespace(qualifiedName, searchRule);
+        return getSubModule().getPackageFragment(qualifiedName);
     }
 
     @Nullable
     public JetScope getJavaPackageScope(@NotNull NamespaceDescriptor namespaceDescriptor) {
-        return namespaceResolver.getJavaPackageScopeForExistingNamespaceDescriptor(namespaceDescriptor);
+        return getSubModule().getPackageFragment(DescriptorUtils.getFQName(namespaceDescriptor).toSafe()).getMemberScope();
     }
 }

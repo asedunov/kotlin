@@ -116,6 +116,8 @@ public class InjectorForJavaDescriptorResolver {
         psiBasedMethodSignatureChecker.setExternalSignatureResolver(traceBasedExternalSignatureResolver);
 
         this.javaDescriptorResolver.setClassResolver(javaClassResolver);
+        this.javaDescriptorResolver.setExternalAnnotationResolver(psiBasedExternalAnnotationResolver);
+        this.javaDescriptorResolver.setJavaClassFinder(javaClassFinder);
         this.javaDescriptorResolver.setNamespaceResolver(javaNamespaceResolver);
 
         virtualFileKotlinClassFinder.setVirtualFileFinder(virtualFileFinder);
