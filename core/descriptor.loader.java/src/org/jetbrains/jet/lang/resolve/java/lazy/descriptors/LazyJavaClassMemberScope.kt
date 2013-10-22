@@ -42,6 +42,14 @@ import org.jetbrains.kotlin.util.iif
 import org.jetbrains.jet.lang.resolve.java.lazy.hasReadOnlyAnnotation
 import org.jetbrains.jet.utils.valuesToMap
 import org.jetbrains.jet.lang.resolve.java.structure.JavaValueParameter
+import org.jetbrains.jet.lang.descriptors.impl.ConstructorDescriptorImpl
+import java.util.Collections
+import org.jetbrains.jet.lang.descriptors.annotations.AnnotationDescriptor
+import org.jetbrains.jet.lang.resolve.java.resolver.JavaConstructorResolver
+import org.jetbrains.jet.utils.*
+import java.util.ArrayList
+import org.jetbrains.jet.lang.resolve.java.lazy.types.toAttributes
+import org.jetbrains.jet.lang.types.JetType
 
 public class LazyJavaClassMemberScope(
         c: LazyJavaResolverContextWithTypes,
@@ -140,6 +148,74 @@ public class LazyJavaClassMemberScope(
                     varargElementType
             )
         }.toList()
+    }
+
+    internal val _constructors = c.storageManager.createLazyValue {
+        jClass.getConstructors().map {
+            jCtor ->
+            val classDescriptor = getContainingDeclaration()
+            val constructorDescriptor = ConstructorDescriptorImpl(classDescriptor, Collections.emptyList(), isPrimary = false)
+            constructorDescriptor.initialize(
+                    classDescriptor.getTypeConstructor().getParameters(),
+                    resolveValueParameters(c, constructorDescriptor, jCtor.getValueParameters()),
+                    jCtor.getVisibility(),
+                    jClass.isStatic());
+            constructorDescriptor.setReturnType(classDescriptor.getDefaultType())
+            constructorDescriptor
+        } ifEmpty {
+            emptyOrSingletonList(createDefaultConstructor())
+        }
+    }
+
+    private fun createDefaultConstructor(): ConstructorDescriptor? {
+        val isAnnotation: Boolean = jClass.isAnnotationType()
+        if (jClass.isInterface() && !isAnnotation)
+            return null
+
+        val classDescriptor = getContainingDeclaration()
+        val constructorDescriptor = ConstructorDescriptorImpl(classDescriptor, Collections.emptyList(), isPrimary = true)
+        val typeParameters = classDescriptor.getTypeConstructor().getParameters()
+        val valueParameters = if (isAnnotation) createAnnotationConstructorParameters(constructorDescriptor)
+                              else Collections.emptyList<ValueParameterDescriptor>()
+
+        constructorDescriptor.initialize(typeParameters, valueParameters, JavaConstructorResolver.getConstructorVisibility(classDescriptor), jClass.isStatic())
+        constructorDescriptor.setReturnType(classDescriptor.getDefaultType())
+        return constructorDescriptor
+    }
+
+    private fun createAnnotationConstructorParameters(constructor: ConstructorDescriptorImpl): List<ValueParameterDescriptor> {
+        val methods = jClass.getMethods()
+        val result = ArrayList<ValueParameterDescriptor>(methods.size())
+
+        for ((index, method) in methods.withIndices()) {
+            assert(method.getValueParameters().isEmpty(), "Annotation method can't have parameters: " + method)
+
+            val jReturnType = method.getReturnType() ?: throw AssertionError("Annotation method has no return type: " + method)
+
+            val varargElementType =
+                if (index == methods.size() - 1 && jReturnType is JavaArrayType) {
+                    c.typeResolver.transformJavaType(
+                            jReturnType.getComponentType(),
+                            TypeUsage.MEMBER_SIGNATURE_INVARIANT.toAttributes()
+                    )
+                }
+                else null
+
+            val returnType: JetType
+            returnType = c.typeResolver.transformJavaType(jReturnType, TypeUsage.MEMBER_SIGNATURE_INVARIANT.toAttributes())
+
+            result.add(ValueParameterDescriptorImpl(
+                    constructor,
+                    index,
+                    Collections.emptyList(),
+                    method.getName(),
+                    returnType,
+                    method.hasAnnotationParameterDefaultValue(),
+                    varargElementType
+            ))
+        }
+
+        return result
     }
 
 
