@@ -21,6 +21,8 @@ import org.jetbrains.jet.lang.resolve.java.resolver.TypeUsage
 import org.jetbrains.jet.lang.resolve.java.lazy.resolveAnnotations
 import org.jetbrains.jet.lang.resolve.java.lazy.types.toAttributes
 import org.jetbrains.jet.lang.resolve.scopes.InnerClassesScopeWrapper
+import org.jetbrains.jet.lang.resolve.java.resolver.JavaSupertypeResolver
+import org.jetbrains.jet.lang.types.lang.KotlinBuiltIns
 
 class LazyJavaClassDescriptor(
         private val c: LazyJavaResolverContextWithTypes,
@@ -79,11 +81,22 @@ class LazyJavaClassDescriptor(
 
         override fun getParameters(): List<TypeParameterDescriptor> = _parameters()
 
-        private val _supertypes = c.storageManager.createLazyValue {
-            outer.jClass.getSupertypes().map {
-                supertype ->
-                outer.innerC.typeResolver.transformJavaType(supertype, TypeUsage.SUPERTYPE.toAttributes())
-            }
+        private val _supertypes = c.storageManager.createLazyValue<Collection<JetType>> {
+            val supertypes = outer.jClass.getSupertypes()
+            if (supertypes.isEmpty())
+                if (outer.jClass.getFqName() == JavaSupertypeResolver.OBJECT_FQ_NAME) {
+                    listOf(KotlinBuiltIns.getInstance().getAnyType())
+                }
+                else {
+                    val jlObject = outer.c.javaClassResolver.resolveClassByFqName(JavaSupertypeResolver.OBJECT_FQ_NAME)?.getDefaultType()
+                    // If java.lang.Object is not found, we simply use Any to recover
+                    emptyOrSingletonList(jlObject ?: KotlinBuiltIns.getInstance().getAnyType())
+                }
+            else
+                supertypes.map {
+                    supertype ->
+                    outer.innerC.typeResolver.transformJavaType(supertype, TypeUsage.SUPERTYPE.toAttributes())
+                }
         }
 
         override fun getSupertypes(): Collection<JetType> = _supertypes()
