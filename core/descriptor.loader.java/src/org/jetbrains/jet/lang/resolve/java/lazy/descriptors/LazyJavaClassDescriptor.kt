@@ -66,20 +66,22 @@ class LazyJavaClassDescriptor(
 
     private inner class LazyJavaClassTypeConstructor : TypeConstructor {
 
+        // TODO: workaround for http://youtrack.jetbrains.com/issue/KT-4106
+        private val outer = this@LazyJavaClassDescriptor
         private val _parameters = c.storageManager.createLazyValue {
-            this@LazyJavaClassDescriptor.jClass.getTypeParameters().map {
+            outer.jClass.getTypeParameters().map({
                 p ->
-                innerC.typeParameterResolver.resolveTypeParameter(p)
-                    ?: throw AssertionError("Parameter $p surely belongs to class $jClass, so it must be resolved")
-            }
+                outer.innerC.typeParameterResolver.resolveTypeParameter(p)
+                    ?: throw AssertionError("Parameter $p surely belongs to class ${outer.jClass}, so it must be resolved")
+            })
         }
 
         override fun getParameters(): List<TypeParameterDescriptor> = _parameters()
 
         private val _supertypes = c.storageManager.createLazyValue {
-            jClass.getSupertypes().map {
+            outer.jClass.getSupertypes().map {
                 supertype ->
-                innerC.typeResolver.transformJavaType(supertype, TypeUsage.SUPERTYPE.toAttributes())
+                outer.innerC.typeResolver.transformJavaType(supertype, TypeUsage.SUPERTYPE.toAttributes())
             }
         }
 
