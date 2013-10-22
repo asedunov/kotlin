@@ -5,8 +5,8 @@ import org.jetbrains.jet.lang.descriptors.impl.AbstractNamespaceDescriptorImpl
 import org.jetbrains.jet.lang.descriptors.impl.NamespaceDescriptorParent
 import org.jetbrains.jet.lang.resolve.name.FqName
 import org.jetbrains.jet.utils.emptyList
-import org.jetbrains.jet.lang.resolve.java.JavaClassFinder
 import org.jetbrains.jet.lang.resolve.java.lazy.LazyJavaResolverContext
+import org.jetbrains.jet.lang.resolve.name.FqNameUnsafe
 
 public class LazyJavaPackageFragment(
         c: LazyJavaResolverContext,
@@ -15,7 +15,7 @@ public class LazyJavaPackageFragment(
 ) : AbstractNamespaceDescriptorImpl(
         containingDeclaration,
         emptyList(),
-        _fqName.shortName()
+        if (_fqName.isRoot()) FqNameUnsafe.ROOT_NAME else _fqName.shortName()
     ), NamespaceDescriptor, LazyJavaDescriptor {
 
     private val _memberScope = LazyJavaPackageFragmentScope(c, this)
