@@ -41,6 +41,7 @@ import org.jetbrains.jet.lang.resolve.java.lazy.hasMutableAnnotation
 import org.jetbrains.kotlin.util.iif
 import org.jetbrains.jet.lang.resolve.java.lazy.hasReadOnlyAnnotation
 import org.jetbrains.jet.utils.valuesToMap
+import org.jetbrains.jet.lang.resolve.java.structure.JavaValueParameter
 
 public class LazyJavaClassMemberScope(
         c: LazyJavaResolverContextWithTypes,
@@ -65,41 +66,7 @@ public class LazyJavaClassMemberScope(
                     name
             )
             val innerC = c.child(function, method.getTypeParameters().toSet())
-            val valueParameters = method.getValueParameters().withIndices().map {
-                pair ->
-                val (index, javaParameter) = pair
-
-                val typeUsage = LazyJavaTypeAttributes(c, javaParameter, TypeUsage.MEMBER_SIGNATURE_COVARIANT) {
-                        javaParameter.hasMutableAnnotation().iif(TypeUsage.MEMBER_SIGNATURE_COVARIANT, TypeUsage.MEMBER_SIGNATURE_CONTRAVARIANT)
-                }
-
-                val (outType, varargElementType) =
-                    if (javaParameter.isVararg()) {
-                        val paramType = javaParameter.getType()
-                        assert (paramType is JavaArrayType, "Vararg parameter should be an array: $paramType")
-                        val arrayType = c.typeResolver.transformArrayType(paramType as JavaArrayType, typeUsage, true)
-                        val outType = TypeUtils.makeNotNullable(arrayType)
-                        Pair(outType, KotlinBuiltIns.getInstance().getArrayElementType(outType))
-                    }
-                    else {
-                        val jetType = c.typeResolver.transformJavaType(javaParameter.getType(), typeUsage)
-                        if (jetType.isNullable() && javaParameter.hasNotNullAnnotation())
-                            Pair(TypeUtils.makeNotNullable(jetType), null)
-                        else Pair(jetType, null)
-                    }
-
-                ValueParameterDescriptorImpl(
-                        function,
-                        index,
-                        innerC.resolveAnnotations(javaParameter.getAnnotations()),
-                        // TODO: parameter names may be drawn from attached sources, which is slow; it's better to make them lazy
-                        javaParameter.getName() ?: Name.identifier("p$index"),
-                        outType,
-                        false,
-                        varargElementType
-                )
-            }.toList()
-
+            val valueParameters = resolveValueParameters(innerC, function, method.getValueParameters())
             val returnTypeAttrs = LazyJavaTypeAttributes(c, method, TypeUsage.MEMBER_SIGNATURE_COVARIANT) {
                 if (method.hasReadOnlyAnnotation() && !method.hasMutableAnnotation())
                     TypeUsage.MEMBER_SIGNATURE_CONTRAVARIANT
@@ -133,6 +100,48 @@ public class LazyJavaClassMemberScope(
 
     override fun getFunctions(name: Name) = _functions(name)
     override fun getAllFunctionNames(): Collection<Name> = methodIndex().keySet()
+
+    private fun resolveValueParameters(
+            innerC: LazyJavaResolverContextWithTypes,
+            function: FunctionDescriptor,
+            jValueParameters: List<JavaValueParameter>
+    ): List<ValueParameterDescriptor> {
+        return jValueParameters.withIndices().map {
+            pair ->
+            val (index, javaParameter) = pair
+
+            val typeUsage = LazyJavaTypeAttributes(c, javaParameter, TypeUsage.MEMBER_SIGNATURE_COVARIANT) {
+                    javaParameter.hasMutableAnnotation().iif(TypeUsage.MEMBER_SIGNATURE_COVARIANT, TypeUsage.MEMBER_SIGNATURE_CONTRAVARIANT)
+            }
+
+            val (outType, varargElementType) =
+                if (javaParameter.isVararg()) {
+                    val paramType = javaParameter.getType()
+                    assert (paramType is JavaArrayType, "Vararg parameter should be an array: $paramType")
+                    val arrayType = c.typeResolver.transformArrayType(paramType as JavaArrayType, typeUsage, true)
+                    val outType = TypeUtils.makeNotNullable(arrayType)
+                    Pair(outType, KotlinBuiltIns.getInstance().getArrayElementType(outType))
+                }
+                else {
+                    val jetType = c.typeResolver.transformJavaType(javaParameter.getType(), typeUsage)
+                    if (jetType.isNullable() && javaParameter.hasNotNullAnnotation())
+                        Pair(TypeUtils.makeNotNullable(jetType), null)
+                    else Pair(jetType, null)
+                }
+
+            ValueParameterDescriptorImpl(
+                    function,
+                    index,
+                    innerC.resolveAnnotations(javaParameter.getAnnotations()),
+                    // TODO: parameter names may be drawn from attached sources, which is slow; it's better to make them lazy
+                    javaParameter.getName() ?: Name.identifier("p$index"),
+                    outType,
+                    false,
+                    varargElementType
+            )
+        }.toList()
+    }
+
 
     // TODO
     override fun getProperties(name: Name): Collection<VariableDescriptor> = listOf()
