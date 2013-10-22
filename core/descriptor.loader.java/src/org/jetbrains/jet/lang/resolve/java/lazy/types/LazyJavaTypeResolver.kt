@@ -168,7 +168,7 @@ class LazyJavaTypeResolver(
         override fun computeMemberScope(): JetScope {
             val descriptor = getConstructor().getDeclarationDescriptor()!!
 
-            if (descriptor is TypeParameterDescriptor) descriptor.getDefaultType().getMemberScope()
+            if (descriptor is TypeParameterDescriptor) return descriptor.getDefaultType().getMemberScope()
 
             return (descriptor as ClassDescriptor).getMemberScope(getArguments())
         }
