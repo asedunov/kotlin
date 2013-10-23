@@ -34,7 +34,7 @@ public abstract class LazyJavaPackageFragmentScope(
 
     override fun getClassifier(name: Name): ClassifierDescriptor? = classes(name)
 
-    override fun getNamespace(name: Name): NamespaceDescriptor? = c.subModule.getPackageFragment(getContainingDeclaration().getFqName())
+    override fun getNamespace(name: Name): NamespaceDescriptor? = c.subModule.getPackageFragment(getContainingDeclaration().getFqName().child(name))
 
     override fun getImplicitReceiversHierarchy(): List<ReceiverParameterDescriptor> = listOf()
 

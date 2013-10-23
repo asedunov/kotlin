@@ -44,7 +44,6 @@ public open class LazyJavaSubModule(
 
     fun getClass(fqName: FqName): ClassDescriptor? = c.javaClassResolver.resolveClassByFqName(fqName)
 
-
     private inner class SubModuleClassResolver : LazyJavaClassResolver {
         override fun resolveClass(javaClass: JavaClass): ClassDescriptor? {
             // TODO: there's no notion of module separation here. We must refuse to resolve classes from other modules
