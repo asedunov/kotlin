@@ -24,12 +24,15 @@ import org.jetbrains.jet.lang.descriptors.TypeParameterDescriptor;
 import org.jetbrains.jet.lang.descriptors.annotations.AnnotationDescriptor;
 import org.jetbrains.jet.lang.descriptors.impl.ClassDescriptorImpl;
 import org.jetbrains.jet.lang.resolve.name.Name;
+import org.jetbrains.jet.lang.resolve.scopes.JetScope;
 import org.jetbrains.jet.lang.types.ErrorUtils;
 import org.jetbrains.jet.lang.types.JetType;
+import org.jetbrains.jet.lang.types.TypeProjection;
 import org.jetbrains.jet.lang.types.TypeSubstitutor;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 import static org.jetbrains.jet.lang.types.ErrorUtils.*;
 
@@ -65,5 +68,11 @@ public final class ErrorClassDescriptor extends ClassDescriptorImpl {
     public void initializeErrorClass() {
         initialize(true, Collections.<TypeParameterDescriptor>emptyList(), Collections.<JetType>emptyList(),
                    createErrorScope("ERROR_CLASS"), getErrorConstructorGroup(), getErrorConstructor(), false);
+    }
+
+    @NotNull
+    @Override
+    public JetScope getMemberScope(List<? extends TypeProjection> typeArguments) {
+        return createErrorScope("Error scope for class " + getName() + " with arguments: " + typeArguments);
     }
 }
