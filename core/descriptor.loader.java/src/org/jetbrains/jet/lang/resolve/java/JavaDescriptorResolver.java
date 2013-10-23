@@ -133,6 +133,10 @@ public class JavaDescriptorResolver implements DependencyClassByQualifiedNameRes
 
     @Nullable
     public JetScope getJavaPackageScope(@NotNull NamespaceDescriptor namespaceDescriptor) {
-        return getSubModule().getPackageFragment(DescriptorUtils.getFQName(namespaceDescriptor).toSafe()).getMemberScope();
+        NamespaceDescriptor packageFragment = getSubModule().getPackageFragment(DescriptorUtils.getFQName(namespaceDescriptor).toSafe());
+        if (packageFragment == null) {
+            return null;
+        }
+        return packageFragment.getMemberScope();
     }
 }
