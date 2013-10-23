@@ -228,7 +228,7 @@ public final class JavaNamespaceResolver {
         return createNamespaceScope(fqName, namespaceDescriptor, false);
     }
 
-    private static boolean hasStaticMembers(@NotNull JavaClass javaClass) {
+    public static boolean hasStaticMembers(@NotNull JavaClass javaClass) {
         for (JavaMethod method : javaClass.getMethods()) {
             if (method.isStatic() && !DescriptorResolverUtils.shouldBeInEnumClassObject(method)) {
                 return true;
