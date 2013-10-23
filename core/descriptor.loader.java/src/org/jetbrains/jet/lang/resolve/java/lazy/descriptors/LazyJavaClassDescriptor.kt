@@ -73,6 +73,8 @@ class LazyJavaClassDescriptor(
     private val _annotations = c.resolveAnnotations(jClass.getAnnotations())
     override fun getAnnotations(): List<AnnotationDescriptor> = _annotations
 
+    override fun toString() = "lazy java class $fqName"
+
     private inner class LazyJavaClassTypeConstructor : TypeConstructor {
 
         // TODO: workaround for http://youtrack.jetbrains.com/issue/KT-4106
