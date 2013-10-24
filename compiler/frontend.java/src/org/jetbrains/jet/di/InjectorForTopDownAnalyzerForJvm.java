@@ -237,6 +237,7 @@ public class InjectorForTopDownAnalyzerForJvm implements InjectorForTopDownAnaly
         javaDescriptorResolver.setExternalAnnotationResolver(psiBasedExternalAnnotationResolver);
         javaDescriptorResolver.setExternalSignatureResolver(traceBasedExternalSignatureResolver);
         javaDescriptorResolver.setJavaClassFinder(javaClassFinder);
+        javaDescriptorResolver.setJavaResolverCache(traceBasedJavaResolverCache);
         javaDescriptorResolver.setNamespaceResolver(javaNamespaceResolver);
         javaDescriptorResolver.setSignatureChecker(psiBasedMethodSignatureChecker);
 
