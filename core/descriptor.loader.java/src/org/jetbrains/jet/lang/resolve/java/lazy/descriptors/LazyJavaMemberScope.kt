@@ -217,6 +217,9 @@ public abstract class LazyJavaMemberScope(
         }
 
         propertyDescriptor.setType(effectiveSignature.getReturnType(), Collections.emptyList(), DescriptorUtils.getExpectedThisObjectIfNeeded(getContainingDeclaration()), null : JetType?)
+
+        c.javaResolverCache.recordField(field, propertyDescriptor);
+
         return propertyDescriptor
     }
 
