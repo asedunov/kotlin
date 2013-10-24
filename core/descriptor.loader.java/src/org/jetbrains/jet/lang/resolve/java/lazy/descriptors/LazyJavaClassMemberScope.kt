@@ -61,20 +61,38 @@ public class LazyJavaClassMemberScope(
 
     internal val _constructors = c.storageManager.createLazyValue {
         jClass.getConstructors().map {
-            jCtor ->
-            val classDescriptor = getContainingDeclaration()
-            val constructorDescriptor = ConstructorDescriptorImpl(classDescriptor, Collections.emptyList(), isPrimary = false)
-            constructorDescriptor.initialize(
-                    classDescriptor.getTypeConstructor().getParameters(),
-                    resolveValueParameters(c, constructorDescriptor, jCtor.getValueParameters()),
-                    jCtor.getVisibility(),
-                    jClass.isStatic());
-            constructorDescriptor.setReturnType(classDescriptor.getDefaultType())
-            constructorDescriptor
+            jCtor -> resolveConstructor(jCtor, getContainingDeclaration(), jClass.isStatic())
         } ifEmpty {
             emptyOrSingletonList(createDefaultConstructor())
         }
     }
+
+    private fun resolveConstructor(constructor: JavaMethod, classDescriptor: ClassDescriptor, isStaticClass: Boolean): ConstructorDescriptor {
+        val constructorDescriptor = ConstructorDescriptorImpl(classDescriptor, Collections.emptyList(), isPrimary = false)
+
+        val valueParameters = resolveValueParameters(c, constructorDescriptor, constructor.getValueParameters())
+        val effectiveSignature = c.externalSignatureResolver.resolveAlternativeMethodSignature(
+                constructor, false, null, null, valueParameters, Collections.emptyList())
+
+        constructorDescriptor.initialize(
+                classDescriptor.getTypeConstructor().getParameters(),
+                effectiveSignature.getValueParameters(),
+                constructor.getVisibility(),
+                isStaticClass
+        )
+
+        constructorDescriptor.setReturnType(classDescriptor.getDefaultType())
+
+        val signatureErrors = effectiveSignature.getErrors()
+        if (!signatureErrors.isEmpty()) {
+            c.externalSignatureResolver.reportSignatureErrors(constructorDescriptor, signatureErrors)
+        }
+
+        c.javaResolverCache.recordConstructor(constructor, constructorDescriptor)
+
+        return constructorDescriptor
+    }
+
 
     private fun createDefaultConstructor(): ConstructorDescriptor? {
         val isAnnotation: Boolean = jClass.isAnnotationType()
@@ -89,6 +107,7 @@ public class LazyJavaClassMemberScope(
 
         constructorDescriptor.initialize(typeParameters, valueParameters, JavaConstructorResolver.getConstructorVisibility(classDescriptor), jClass.isStatic())
         constructorDescriptor.setReturnType(classDescriptor.getDefaultType())
+        c.javaResolverCache.recordConstructor(jClass, constructorDescriptor);
         return constructorDescriptor
     }
 
