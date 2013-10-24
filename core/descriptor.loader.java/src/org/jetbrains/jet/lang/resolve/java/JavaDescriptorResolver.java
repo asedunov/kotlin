@@ -51,6 +51,7 @@ public class JavaDescriptorResolver implements DependencyClassByQualifiedNameRes
     private ExternalSignatureResolver externalSignatureResolver;
     private ErrorReporter errorReporter;
     private MethodSignatureChecker signatureChecker;
+    private JavaResolverCache javaResolverCache;
 
     @Inject
     public void setClassResolver(JavaClassResolver classResolver) {
@@ -87,6 +88,11 @@ public class JavaDescriptorResolver implements DependencyClassByQualifiedNameRes
         this.signatureChecker = signatureChecker;
     }
 
+    @Inject
+    public void setJavaResolverCache(JavaResolverCache javaResolverCache) {
+        this.javaResolverCache = javaResolverCache;
+    }
+
     @NotNull
     private LazyJavaSubModule getSubModule() {
         if (subModule == null) {
@@ -108,7 +114,8 @@ public class JavaDescriptorResolver implements DependencyClassByQualifiedNameRes
                             externalAnnotationResolver,
                             externalSignatureResolver,
                             errorReporter,
-                            signatureChecker
+                            signatureChecker,
+                            javaResolverCache
                     ),
                     new ModuleDescriptorImpl(Name.special("<java module>"), Collections.<ImportPath>emptyList(), PlatformToKotlinClassMap.EMPTY)
             );
