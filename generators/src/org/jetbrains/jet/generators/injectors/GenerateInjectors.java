@@ -118,7 +118,7 @@ public class GenerateInjectors {
         generator.implementInterface(InjectorForTopDownAnalyzer.class);
         generateInjectorForTopDownAnalyzerCommon(generator);
         generator.addPublicField(JavaBridgeConfiguration.class);
-        generator.addField(JavaDescriptorResolver.class);
+        generator.addPublicField(JavaDescriptorResolver.class);
         generator.addField(false, JavaToKotlinClassMap.class, null, new GivenExpression("org.jetbrains.jet.lang.resolve.java.mapping.JavaToKotlinClassMap.getInstance()"));
         generator.addField(JavaClassFinderImpl.class);
         generator.addField(TraceBasedExternalSignatureResolver.class);

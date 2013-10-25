@@ -159,7 +159,7 @@ public abstract class AbstractLoadJavaTest extends TestCaseWithTmpdir {
 
         injectorForAnalyzer.getTopDownAnalyzer().analyzeFiles(environment.getSourceFiles(), Collections.<AnalyzerScriptParameter>emptyList());
 
-        JavaDescriptorResolver javaDescriptorResolver = injectorForJava.getJavaDescriptorResolver();
+        JavaDescriptorResolver javaDescriptorResolver = injectorForAnalyzer.getJavaDescriptorResolver();
         NamespaceDescriptor namespaceDescriptor = javaDescriptorResolver.resolveNamespace(TEST_PACKAGE_FQNAME, INCLUDE_KOTLIN_SOURCES);
         assert namespaceDescriptor != null : "Test namespace not found";
 

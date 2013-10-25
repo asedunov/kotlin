@@ -232,14 +232,14 @@ public class InjectorForTopDownAnalyzerForJvm implements InjectorForTopDownAnaly
 
         this.javaBridgeConfiguration.setJavaDescriptorResolver(javaDescriptorResolver);
 
-        javaDescriptorResolver.setClassResolver(javaClassResolver);
-        javaDescriptorResolver.setErrorReporter(traceBasedErrorReporter);
-        javaDescriptorResolver.setExternalAnnotationResolver(psiBasedExternalAnnotationResolver);
-        javaDescriptorResolver.setExternalSignatureResolver(traceBasedExternalSignatureResolver);
-        javaDescriptorResolver.setJavaClassFinder(javaClassFinder);
-        javaDescriptorResolver.setJavaResolverCache(traceBasedJavaResolverCache);
-        javaDescriptorResolver.setNamespaceResolver(javaNamespaceResolver);
-        javaDescriptorResolver.setSignatureChecker(psiBasedMethodSignatureChecker);
+        this.javaDescriptorResolver.setClassResolver(javaClassResolver);
+        this.javaDescriptorResolver.setErrorReporter(traceBasedErrorReporter);
+        this.javaDescriptorResolver.setExternalAnnotationResolver(psiBasedExternalAnnotationResolver);
+        this.javaDescriptorResolver.setExternalSignatureResolver(traceBasedExternalSignatureResolver);
+        this.javaDescriptorResolver.setJavaClassFinder(javaClassFinder);
+        this.javaDescriptorResolver.setJavaResolverCache(traceBasedJavaResolverCache);
+        this.javaDescriptorResolver.setNamespaceResolver(javaNamespaceResolver);
+        this.javaDescriptorResolver.setSignatureChecker(psiBasedMethodSignatureChecker);
 
         javaClassFinder.setProject(project);
 
@@ -449,6 +449,10 @@ public class InjectorForTopDownAnalyzerForJvm implements InjectorForTopDownAnaly
     
     public JavaBridgeConfiguration getJavaBridgeConfiguration() {
         return this.javaBridgeConfiguration;
+    }
+    
+    public JavaDescriptorResolver getJavaDescriptorResolver() {
+        return this.javaDescriptorResolver;
     }
     
     public NamespaceFactoryImpl getNamespaceFactory() {
