@@ -96,7 +96,7 @@ class LazyJavaClassDescriptor(
                     listOf(KotlinBuiltIns.getInstance().getAnyType())
                 }
                 else {
-                    val jlObject = outer.c.javaClassResolver.resolveClassByFqName(JavaSupertypeResolver.OBJECT_FQ_NAME)?.getDefaultType()
+                    val jlObject = outer.innerC.javaClassResolver.resolveClassByFqName(JavaSupertypeResolver.OBJECT_FQ_NAME)?.getDefaultType()
                     // If java.lang.Object is not found, we simply use Any to recover
                     emptyOrSingletonList(jlObject ?: KotlinBuiltIns.getInstance().getAnyType())
                 }

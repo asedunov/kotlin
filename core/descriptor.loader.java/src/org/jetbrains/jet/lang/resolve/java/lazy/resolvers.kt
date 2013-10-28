@@ -62,7 +62,7 @@ class LazyJavaTypeParameterResolver(
                 javaTypeParameter ->
                 if (javaTypeParameter in typeParameters)
                     LazyJavaTypeParameterDescriptor(
-                            c,
+                            c.withTypes(this),
                             javaTypeParameter,
                             containingDeclaration
                     )
