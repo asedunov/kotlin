@@ -47,9 +47,6 @@ class LazyJavaTypeResolver(
         private val c: LazyJavaResolverContext,
         private val typeParameterResolver: TypeParameterResolver
 ) {
-    public fun child(additionalTypeParameters: Collection<LazyJavaTypeParameterDescriptor>): LazyJavaTypeResolver {
-        return LazyJavaTypeResolver(c, TypeParameterResolverImpl(additionalTypeParameters, typeParameterResolver))
-    }
 
     public fun transformJavaType(javaType: JavaType, attr: JavaTypeAttributes): JetType {
         return when (javaType) {
