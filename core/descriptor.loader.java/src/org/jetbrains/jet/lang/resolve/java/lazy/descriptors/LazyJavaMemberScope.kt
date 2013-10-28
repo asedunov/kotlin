@@ -150,7 +150,7 @@ public abstract class LazyJavaMemberScope(
             pair ->
             val (index, javaParameter) = pair
 
-            val typeUsage = LazyJavaTypeAttributes(c, javaParameter, TypeUsage.MEMBER_SIGNATURE_COVARIANT) {
+            val typeUsage = LazyJavaTypeAttributes(c, javaParameter, TypeUsage.MEMBER_SIGNATURE_CONTRAVARIANT) {
                     c.hasMutableAnnotation(javaParameter).iif(TypeUsage.MEMBER_SIGNATURE_COVARIANT, TypeUsage.MEMBER_SIGNATURE_CONTRAVARIANT)
             }
 
