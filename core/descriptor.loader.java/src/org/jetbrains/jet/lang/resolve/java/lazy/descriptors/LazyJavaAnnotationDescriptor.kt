@@ -43,7 +43,7 @@ class LazyJavaAnnotationDescriptor(
         val javaAnnotation : JavaAnnotation
 ) : AnnotationDescriptor {
 
-    private val _fqName = c.storageManager.createLazyValue { javaAnnotation.getFqName() }
+    private val _fqName = c.storageManager.createNullableLazyValue { javaAnnotation.getFqName() }
     private val _type = c.storageManager.createLazyValue {() : JetType ->
         val fqName = _fqName()
         if (fqName == null) return@createLazyValue ErrorUtils.createErrorType("No fqName: $javaAnnotation")
