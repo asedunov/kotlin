@@ -97,7 +97,7 @@ public abstract class LazyJavaMemberScope(
         }
 
         val returnJavaType = method.getReturnType() ?: throw IllegalStateException("Constructor passed as method: $method")
-        val returnType = c.typeResolver.transformJavaType(returnJavaType, returnTypeAttrs)
+        val returnType = innerC.typeResolver.transformJavaType(returnJavaType, returnTypeAttrs)
 
         val signatureErrors: MutableList<String>
         val superFunctions: List<FunctionDescriptor>
@@ -142,7 +142,7 @@ public abstract class LazyJavaMemberScope(
     }
 
     protected fun resolveValueParameters(
-            innerC: LazyJavaResolverContextWithTypes,
+            c: LazyJavaResolverContextWithTypes,
             function: FunctionDescriptor,
             jValueParameters: List<JavaValueParameter>
     ): List<ValueParameterDescriptor> {
@@ -172,7 +172,7 @@ public abstract class LazyJavaMemberScope(
             ValueParameterDescriptorImpl(
                     function,
                     index,
-                    innerC.resolveAnnotations(javaParameter.getAnnotations()),
+                    c.resolveAnnotations(javaParameter.getAnnotations()),
                     // TODO: parameter names may be drawn from attached sources, which is slow; it's better to make them lazy
                     javaParameter.getName() ?: Name.identifier("p$index"),
                     outType,
