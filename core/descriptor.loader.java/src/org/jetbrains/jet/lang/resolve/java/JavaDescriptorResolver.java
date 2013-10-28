@@ -41,6 +41,8 @@ import java.util.Collections;
 import static org.jetbrains.jet.lang.resolve.java.DescriptorSearchRule.IGNORE_KOTLIN_SOURCES;
 
 public class JavaDescriptorResolver implements DependencyClassByQualifiedNameResolver {
+    private static final boolean LAZY = true;
+
     public static final Name JAVA_ROOT = Name.special("<java_root>");
 
     private JavaClassResolver classResolver;
@@ -125,7 +127,10 @@ public class JavaDescriptorResolver implements DependencyClassByQualifiedNameRes
 
     @Nullable
     public ClassDescriptor resolveClass(@NotNull FqName qualifiedName, @NotNull DescriptorSearchRule searchRule) {
-        return getSubModule().getClass(qualifiedName);
+        if (LAZY) {
+            return getSubModule().getClass(qualifiedName);
+        }
+        return classResolver.resolveClass(qualifiedName, searchRule);
     }
 
     @Override
@@ -135,15 +140,21 @@ public class JavaDescriptorResolver implements DependencyClassByQualifiedNameRes
 
     @Nullable
     public NamespaceDescriptor resolveNamespace(@NotNull FqName qualifiedName, @NotNull DescriptorSearchRule searchRule) {
-        return getSubModule().getPackageFragment(qualifiedName);
+        if (LAZY) {
+            return getSubModule().getPackageFragment(qualifiedName);
+        }
+        return namespaceResolver.resolveNamespace(qualifiedName, searchRule);
     }
 
     @Nullable
     public JetScope getJavaPackageScope(@NotNull NamespaceDescriptor namespaceDescriptor) {
-        NamespaceDescriptor packageFragment = getSubModule().getPackageFragment(DescriptorUtils.getFQName(namespaceDescriptor).toSafe());
-        if (packageFragment == null) {
-            return null;
+        if (LAZY) {
+            NamespaceDescriptor packageFragment = getSubModule().getPackageFragment(DescriptorUtils.getFQName(namespaceDescriptor).toSafe());
+            if (packageFragment == null) {
+                return null;
+            }
+            return packageFragment.getMemberScope();
         }
-        return packageFragment.getMemberScope();
+        return namespaceResolver.getJavaPackageScopeForExistingNamespaceDescriptor(namespaceDescriptor);
     }
 }
