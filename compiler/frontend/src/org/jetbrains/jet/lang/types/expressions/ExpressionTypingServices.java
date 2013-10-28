@@ -400,7 +400,7 @@ public class ExpressionTypingServices {
                 getType(declaringScope, defaultValue, valueParameterDescriptor.getType(), dataFlowInfo, trace);
                 if (DescriptorUtils.isAnnotationClass(DescriptorUtils.getContainingClass(declaringScope))) {
                     CompileTimeConstant<?> constant =
-                            annotationResolver.resolveExpressionToCompileTimeValue(defaultValue, valueParameterDescriptor.getType(), trace);
+                            AnnotationResolver.resolveExpressionToCompileTimeValue(defaultValue, valueParameterDescriptor.getType(), trace);
                     if (constant != null) {
                         trace.record(BindingContext.COMPILE_TIME_VALUE, defaultValue, constant);
                     }

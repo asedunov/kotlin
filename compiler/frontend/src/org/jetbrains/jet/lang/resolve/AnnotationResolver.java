@@ -203,7 +203,7 @@ public class AnnotationResolver {
         }
     }
 
-    private void resolveAnnotationArgument(
+    public static void resolveAnnotationArgument(
             @NotNull AnnotationDescriptorImpl annotationDescriptor,
             @NotNull ResolvedCall<? extends CallableDescriptor> call,
             @NotNull BindingTrace trace
@@ -230,7 +230,7 @@ public class AnnotationResolver {
     }
 
     @NotNull
-    private List<CompileTimeConstant<?>> resolveValueArguments(
+    private static List<CompileTimeConstant<?>> resolveValueArguments(
             @NotNull ResolvedValueArgument resolvedValueArgument,
             @NotNull JetType expectedType,
             @NotNull BindingTrace trace
@@ -249,123 +249,12 @@ public class AnnotationResolver {
     }
 
     @Nullable
-    public CompileTimeConstant<?> resolveExpressionToCompileTimeValue(
+    public static CompileTimeConstant<?> resolveExpressionToCompileTimeValue(
             @NotNull JetExpression expression,
-            @NotNull final JetType expectedType,
-            @NotNull final BindingTrace trace
+            @NotNull JetType expectedType,
+            @NotNull BindingTrace trace
     ) {
-        JetVisitor<CompileTimeConstant<?>, Void> visitor = new JetVisitor<CompileTimeConstant<?>, Void>() {
-            @Override
-            public CompileTimeConstant<?> visitConstantExpression(@NotNull JetConstantExpression expression, Void nothing) {
-                JetType type = expressionTypingServices.getType(JetScope.EMPTY, expression, expectedType, DataFlowInfo.EMPTY, trace);
-                if (type == null) {
-                    // TODO:
-                    //  trace.report(ANNOTATION_PARAMETER_SHOULD_BE_CONSTANT.on(expression));
-                }
-                return trace.get(BindingContext.COMPILE_TIME_VALUE, expression);
-            }
-
-
-            // @Override
-//            public CompileTimeConstant visitAnnotation(JetAnnotation annotation, Void nothing) {
-//                super.visitAnnotation(annotation, null); // TODO
-//            }
-//
-//            @Override
-//            public CompileTimeConstant visitAnnotationEntry(JetAnnotationEntry annotationEntry, Void nothing) {
-//                return super.visitAnnotationEntry(annotationEntry, null); // TODO
-//            }
-
-            @Override
-            public CompileTimeConstant<?> visitParenthesizedExpression(@NotNull JetParenthesizedExpression expression, Void nothing) {
-                JetExpression innerExpression = expression.getExpression();
-                if (innerExpression == null) return null;
-                return innerExpression.accept(this, null);
-            }
-
-            @Override
-            public CompileTimeConstant<?> visitStringTemplateExpression(
-                    @NotNull JetStringTemplateExpression expression,
-                                                                        Void nothing) {
-                return trace.get(BindingContext.COMPILE_TIME_VALUE, expression);
-            }
-
-            @Override
-            public CompileTimeConstant<?> visitSimpleNameExpression(@NotNull JetSimpleNameExpression expression, Void data) {
-                ResolvedCall<? extends CallableDescriptor> resolvedCall =
-                        trace.getBindingContext().get(BindingContext.RESOLVED_CALL, expression);
-                if (resolvedCall != null) {
-                    CallableDescriptor callableDescriptor = resolvedCall.getResultingDescriptor();
-                    if (callableDescriptor instanceof PropertyDescriptor) {
-                        PropertyDescriptor propertyDescriptor = (PropertyDescriptor) callableDescriptor;
-                        if (isEnumProperty(propertyDescriptor)) {
-                            return new EnumValue(propertyDescriptor);
-                        }
-                        if (AnnotationUtils.isPropertyAcceptableAsAnnotationParameter(propertyDescriptor)) {
-                            return trace.getBindingContext().get(COMPILE_TIME_INITIALIZER, propertyDescriptor);
-                        }
-                    }
-                }
-                return null;
-            }
-
-            @Override
-            public CompileTimeConstant<?> visitQualifiedExpression(@NotNull JetQualifiedExpression expression, Void data) {
-                JetExpression selectorExpression = expression.getSelectorExpression();
-                if (selectorExpression != null) {
-                    return selectorExpression.accept(this, null);
-                }
-                return super.visitQualifiedExpression(expression, data);
-            }
-
-            @Override
-            public CompileTimeConstant<?> visitCallExpression(@NotNull JetCallExpression expression, Void data) {
-                ResolvedCall<? extends CallableDescriptor> call =
-                        trace.getBindingContext().get(BindingContext.RESOLVED_CALL, (expression).getCalleeExpression());
-                if (call != null) {
-                    CallableDescriptor resultingDescriptor = call.getResultingDescriptor();
-                    if (AnnotationUtils.isArrayMethodCall(call)) {
-                        JetType type = resultingDescriptor.getValueParameters().iterator().next().getVarargElementType();
-                        List<CompileTimeConstant<?>> arguments = Lists.newArrayList();
-                        for (ResolvedValueArgument descriptorToArgument : call.getValueArguments().values()) {
-                            arguments.addAll(resolveValueArguments(descriptorToArgument, type, trace));
-                        }
-                        return new ArrayValue(arguments, resultingDescriptor.getReturnType());
-                    }
-
-                    if (resultingDescriptor instanceof ConstructorDescriptor) {
-                        JetType constructorReturnType = resultingDescriptor.getReturnType();
-                        assert constructorReturnType != null : "Constructor should have return type";
-                        if (DescriptorUtils.isAnnotationClass(constructorReturnType.getConstructor().getDeclarationDescriptor())) {
-                            AnnotationDescriptorImpl descriptor = new AnnotationDescriptorImpl();
-                            descriptor.setAnnotationType(constructorReturnType);
-                            resolveAnnotationArgument(descriptor, call, trace);
-                            return new AnnotationValue(descriptor);
-                        }
-                    }
-
-                    if (AnnotationUtils.isJavaClassMethodCall(call)) {
-                        return new JavaClassValue(resultingDescriptor.getReturnType());
-                    }
-                }
-                return null;
-            }
-
-            @Override
-            public CompileTimeConstant<?> visitJetElement(@NotNull JetElement element, Void nothing) {
-                // TODO:
-                //trace.report(ANNOTATION_PARAMETER_SHOULD_BE_CONSTANT.on(element));
-                return null;
-            }
-        };
-        return expression.accept(visitor, null);
-    }
-
-    private static boolean isEnumProperty(@NotNull PropertyDescriptor descriptor) {
-        ClassifierDescriptor classifier = descriptor.getType().getConstructor().getDeclarationDescriptor();
-        return classifier != null &&
-               DescriptorUtils.isEnumClass(classifier) &&
-               DescriptorUtils.isEnumClassObject(descriptor.getContainingDeclaration());
+        return expression.accept(new ConstantExpressionEvaluator(trace, expectedType), null);
     }
 
     @NotNull
