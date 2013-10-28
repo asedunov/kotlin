@@ -95,7 +95,7 @@ class LazyJavaTypeResolver(
         override fun computeTypeConstructor(): TypeConstructor {
             val classifier = javaType.getClassifier()
             if (classifier == null) {
-                return ErrorUtils.createErrorTypeConstructor("Unresolved Java class: " + javaType.getPresentableText())
+                return ErrorUtils.createErrorTypeConstructor("Unresolved java classifier: " + javaType.getPresentableText())
             }
             return when (classifier) {
                 is JavaClass -> {
@@ -116,7 +116,7 @@ class LazyJavaTypeResolver(
                                     ?: c.javaClassResolver.resolveClass(classifier)
 
                     classData?.getTypeConstructor()
-                        ?: ErrorUtils.createErrorTypeConstructor("Unresolved Java class: " + javaType.getPresentableText())
+                        ?: ErrorUtils.createErrorTypeConstructor("Unresolved java classifier: " + javaType.getPresentableText())
                 }
                 is JavaTypeParameter -> {
                     val owner = classifier.getOwner()
