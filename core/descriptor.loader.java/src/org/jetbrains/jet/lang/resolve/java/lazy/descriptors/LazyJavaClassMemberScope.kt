@@ -64,8 +64,10 @@ public class LazyJavaClassMemberScope(
             jCtor ->
             val constructor = resolveConstructor(jCtor, getContainingDeclaration(), jClass.isStatic())
             val samAdapter = JavaConstructorResolver.resolveSamAdapter(constructor)
-            if (samAdapter != null)
+            if (samAdapter != null) {
+                (samAdapter as ConstructorDescriptorImpl).setReturnType(containingDeclaration.getDefaultType())
                 listOf(constructor, samAdapter)
+            }
             else
                 listOf(constructor)
         } ifEmpty {
