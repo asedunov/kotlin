@@ -36,6 +36,7 @@ import org.jetbrains.jet.lang.resolve.java.descriptor.JavaPropertyDescriptor
 import org.jetbrains.jet.lang.descriptors.impl.PropertyDescriptorImpl
 import java.util.Collections
 import org.jetbrains.jet.lang.resolve.java.resolver.ExternalSignatureResolver
+import org.jetbrains.jet.lang.resolve.java.sam.SingleAbstractMethodUtils
 
 public abstract class LazyJavaMemberScope(
         protected val c: LazyJavaResolverContextWithTypes,
@@ -71,6 +72,13 @@ public abstract class LazyJavaMemberScope(
             else
                 listOf(function)
         })
+
+        if (_containingDeclaration is NamespaceDescriptor) {
+            val klass = JavaFunctionResolver.findClassInNamespace(_containingDeclaration, name);
+            if (klass != null && klass.getFunctionTypeForSamInterface() != null) {
+                functions.add(SingleAbstractMethodUtils.createSamConstructorFunction(_containingDeclaration, klass))
+            }
+        }
 
         if (_containingDeclaration is ClassDescriptor) {
             val functionsFromSupertypes = JavaFunctionResolver.getFunctionsFromSupertypes(name, _containingDeclaration);

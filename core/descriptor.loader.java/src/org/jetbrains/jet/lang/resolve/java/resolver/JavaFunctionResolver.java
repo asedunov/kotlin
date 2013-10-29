@@ -244,7 +244,7 @@ public final class JavaFunctionResolver {
     // +-- namespace Bar
     // We need to find class 'Baz' in namespace 'foo.Bar'.
     @Nullable
-    private static JavaClassDescriptor findClassInNamespace(@NotNull NamespaceDescriptor namespace, @NotNull Name name) {
+    public static JavaClassDescriptor findClassInNamespace(@NotNull NamespaceDescriptor namespace, @NotNull Name name) {
         // First, try to find in namespace directly
         JavaClassDescriptor found = findClassInScope(namespace.getMemberScope(), name);
         if (found != null) {
