@@ -24,11 +24,14 @@ import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElementFinder;
 import com.intellij.psi.PsiPackage;
 import com.intellij.psi.impl.JavaPsiFacadeImpl;
+import com.intellij.psi.impl.file.PsiPackageImplementationHelper;
 import com.intellij.psi.impl.file.impl.JavaFileManager;
 import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.util.containers.ContainerUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.LinkedHashSet;
 import java.util.List;
 
 /**
@@ -100,4 +103,13 @@ public class JavaPsiFacadeKotlinHacks {
         return null;
     }
 
+    public PsiPackage[] getSubPackages(@NotNull PsiPackage psiPackage) {
+        LinkedHashSet<PsiPackage> result = new LinkedHashSet<PsiPackage>();
+        for (PsiElementFinder finder : extensionPsiElementFinders) {
+            PsiPackage[] packages = finder.getSubPackages(psiPackage, GlobalSearchScope.allScope(psiPackage.getProject()));
+            ContainerUtil.addAll(result, packages);
+        }
+
+        return result.toArray(new PsiPackage[result.size()]);
+    }
 }

@@ -38,6 +38,8 @@ import org.jetbrains.jet.codegen.state.GenerationState;
 import org.jetbrains.jet.codegen.state.Progress;
 import org.jetbrains.jet.config.CommonConfigurationKeys;
 import org.jetbrains.jet.config.CompilerConfiguration;
+import org.jetbrains.jet.lang.descriptors.ModuleDescriptor;
+import org.jetbrains.jet.lang.descriptors.ModuleDescriptorImpl;
 import org.jetbrains.jet.lang.parsing.JetScriptDefinition;
 import org.jetbrains.jet.lang.parsing.JetScriptDefinitionProvider;
 import org.jetbrains.jet.lang.psi.JetFile;
@@ -314,14 +316,17 @@ public class KotlinToJVMBytecodeCompiler {
                     @NotNull
                     @Override
                     public AnalyzeExhaust invoke() {
-                        BindingTrace sharedTrace = CliLightClassGenerationSupport.getInstanceForCli(environment.getProject()).getTrace();
+                        CliLightClassGenerationSupport support = CliLightClassGenerationSupport.getInstanceForCli(environment.getProject());
+                        BindingTrace sharedTrace = support.getTrace();
+                        ModuleDescriptorImpl sharedModule = support.getModule();
                         return AnalyzerFacadeForJVM.analyzeFilesWithJavaIntegration(
                                 environment.getProject(),
                                 environment.getSourceFiles(),
                                 sharedTrace,
                                 scriptParameters,
                                 filesToAnalyzeCompletely,
-                                false
+                                false,
+                                sharedModule
                         );
                     }
                 }, environment.getSourceFiles()
