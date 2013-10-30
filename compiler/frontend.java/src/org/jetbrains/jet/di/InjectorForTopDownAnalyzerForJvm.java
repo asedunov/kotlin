@@ -27,7 +27,6 @@ import com.intellij.openapi.project.Project;
 import org.jetbrains.jet.lang.resolve.TopDownAnalysisParameters;
 import org.jetbrains.jet.lang.resolve.BindingTrace;
 import org.jetbrains.jet.lang.descriptors.ModuleDescriptorImpl;
-import org.jetbrains.jet.lang.resolve.java.JavaBridgeConfiguration;
 import org.jetbrains.jet.lang.resolve.java.JavaDescriptorResolver;
 import org.jetbrains.jet.lang.resolve.java.mapping.JavaToKotlinClassMap;
 import org.jetbrains.jet.lang.resolve.java.JavaClassFinderImpl;
@@ -87,7 +86,6 @@ public class InjectorForTopDownAnalyzerForJvm implements InjectorForTopDownAnaly
     private final TopDownAnalysisParameters topDownAnalysisParameters;
     private final BindingTrace bindingTrace;
     private final ModuleDescriptorImpl moduleDescriptor;
-    private final JavaBridgeConfiguration javaBridgeConfiguration;
     private final JavaDescriptorResolver javaDescriptorResolver;
     private final JavaToKotlinClassMap javaToKotlinClassMap;
     private final JavaClassFinderImpl javaClassFinder;
@@ -148,7 +146,6 @@ public class InjectorForTopDownAnalyzerForJvm implements InjectorForTopDownAnaly
         this.topDownAnalysisParameters = topDownAnalysisParameters;
         this.bindingTrace = bindingTrace;
         this.moduleDescriptor = moduleDescriptor;
-        this.javaBridgeConfiguration = new JavaBridgeConfiguration();
         this.javaDescriptorResolver = new JavaDescriptorResolver();
         this.javaToKotlinClassMap = org.jetbrains.jet.lang.resolve.java.mapping.JavaToKotlinClassMap.getInstance();
         this.javaClassFinder = new JavaClassFinderImpl();
@@ -429,10 +426,6 @@ public class InjectorForTopDownAnalyzerForJvm implements InjectorForTopDownAnaly
     
     public ModuleDescriptorImpl getModuleDescriptor() {
         return this.moduleDescriptor;
-    }
-    
-    public JavaBridgeConfiguration getJavaBridgeConfiguration() {
-        return this.javaBridgeConfiguration;
     }
     
 }

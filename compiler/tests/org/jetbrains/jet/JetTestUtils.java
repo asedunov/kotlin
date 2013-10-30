@@ -41,7 +41,6 @@ import org.jetbrains.jet.codegen.forTestCompile.ForTestCompileRuntime;
 import org.jetbrains.jet.codegen.forTestCompile.ForTestPackJdkAnnotations;
 import org.jetbrains.jet.config.CommonConfigurationKeys;
 import org.jetbrains.jet.config.CompilerConfiguration;
-import org.jetbrains.jet.lang.ModuleConfiguration;
 import org.jetbrains.jet.lang.PlatformToKotlinClassMap;
 import org.jetbrains.jet.lang.descriptors.ModuleDescriptorImpl;
 import org.jetbrains.jet.lang.descriptors.impl.MutablePackageFragmentDescriptor;
@@ -649,11 +648,7 @@ public class JetTestUtils {
     }
 
     public static ModuleDescriptorImpl createEmptyModule(@NotNull String name) {
-        ModuleDescriptorImpl descriptor = new ModuleDescriptorImpl(Name.special(name),
-                                                                   Collections.<ImportPath>emptyList(),
-                                                                   PlatformToKotlinClassMap.EMPTY);
-        descriptor.setModuleConfiguration(ModuleConfiguration.EMPTY);
-        return descriptor;
+        return new ModuleDescriptorImpl(Name.special(name), Collections.<ImportPath>emptyList(), PlatformToKotlinClassMap.EMPTY);
     }
 
     // TODO 1 review it 'n' remove it
