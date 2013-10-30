@@ -116,11 +116,13 @@ public class InjectorForJavaDescriptorResolver {
         psiBasedMethodSignatureChecker.setExternalSignatureResolver(traceBasedExternalSignatureResolver);
 
         this.javaDescriptorResolver.setClassResolver(javaClassResolver);
+        this.javaDescriptorResolver.setDeserializedDescriptorResolver(deserializedDescriptorResolver);
         this.javaDescriptorResolver.setErrorReporter(traceBasedErrorReporter);
         this.javaDescriptorResolver.setExternalAnnotationResolver(psiBasedExternalAnnotationResolver);
         this.javaDescriptorResolver.setExternalSignatureResolver(traceBasedExternalSignatureResolver);
         this.javaDescriptorResolver.setJavaClassFinder(javaClassFinder);
         this.javaDescriptorResolver.setJavaResolverCache(traceBasedJavaResolverCache);
+        this.javaDescriptorResolver.setKotlinClassFinder(virtualFileKotlinClassFinder);
         this.javaDescriptorResolver.setNamespaceResolver(javaNamespaceResolver);
         this.javaDescriptorResolver.setSignatureChecker(psiBasedMethodSignatureChecker);
 
