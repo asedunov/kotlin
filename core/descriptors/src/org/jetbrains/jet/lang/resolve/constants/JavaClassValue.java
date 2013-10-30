@@ -47,6 +47,9 @@ public class JavaClassValue implements CompileTimeConstant<JetType> {
 
     @Override
     public String toString() {
+        // compute lazy type contents
+        getValue().getConstructor();
+        getValue().getArguments();
         return getValue() + ".class";
     }
 }
