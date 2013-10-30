@@ -27,6 +27,7 @@ import org.jetbrains.jet.lang.resolve.java.resolver.PsiBasedExternalAnnotationRe
 import org.jetbrains.jet.lang.resolve.java.JavaDescriptorResolver;
 import org.jetbrains.jet.lang.resolve.kotlin.VirtualFileKotlinClassFinder;
 import org.jetbrains.jet.lang.resolve.kotlin.VirtualFileFinder;
+import org.jetbrains.jet.lang.descriptors.ModuleDescriptor;
 import org.jetbrains.jet.lang.resolve.java.resolver.JavaAnnotationResolver;
 import org.jetbrains.jet.lang.resolve.java.resolver.JavaAnnotationArgumentResolver;
 import org.jetbrains.jet.lang.resolve.java.resolver.JavaClassResolver;
@@ -58,6 +59,7 @@ public class InjectorForJavaDescriptorResolver {
     private final JavaDescriptorResolver javaDescriptorResolver;
     private final VirtualFileKotlinClassFinder virtualFileKotlinClassFinder;
     private final VirtualFileFinder virtualFileFinder;
+    private final ModuleDescriptor moduleDescriptor;
     private final JavaAnnotationResolver javaAnnotationResolver;
     private final JavaAnnotationArgumentResolver javaAnnotationArgumentResolver;
     private final JavaClassResolver javaClassResolver;
@@ -88,6 +90,7 @@ public class InjectorForJavaDescriptorResolver {
         this.javaDescriptorResolver = new JavaDescriptorResolver();
         this.virtualFileKotlinClassFinder = new VirtualFileKotlinClassFinder();
         this.virtualFileFinder = com.intellij.openapi.components.ServiceManager.getService(project, VirtualFileFinder.class);
+        this.moduleDescriptor = org.jetbrains.jet.lang.resolve.java.JavaDescriptorResolver.FAKE_JAVA_MODULE;
         this.javaAnnotationResolver = new JavaAnnotationResolver();
         this.javaAnnotationArgumentResolver = new JavaAnnotationArgumentResolver();
         this.javaClassResolver = new JavaClassResolver();
@@ -123,6 +126,7 @@ public class InjectorForJavaDescriptorResolver {
         this.javaDescriptorResolver.setJavaClassFinder(javaClassFinder);
         this.javaDescriptorResolver.setJavaResolverCache(traceBasedJavaResolverCache);
         this.javaDescriptorResolver.setKotlinClassFinder(virtualFileKotlinClassFinder);
+        this.javaDescriptorResolver.setModule(moduleDescriptor);
         this.javaDescriptorResolver.setNamespaceResolver(javaNamespaceResolver);
         this.javaDescriptorResolver.setSignatureChecker(psiBasedMethodSignatureChecker);
 

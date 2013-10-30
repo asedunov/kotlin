@@ -160,6 +160,8 @@ public class GenerateInjectors {
         generator.addField(VirtualFileKotlinClassFinder.class);
         generator.addField(false, VirtualFileFinder.class, "virtualFileFinder",
                            new GivenExpression("com.intellij.openapi.components.ServiceManager.getService(project, VirtualFileFinder.class)"));
+        generator.addField(false, ModuleDescriptor.class, "moduleDescriptor",
+                           new GivenExpression("org.jetbrains.jet.lang.resolve.java.JavaDescriptorResolver.FAKE_JAVA_MODULE"));
 
         generator.configure("compiler/frontend.java/src", "org.jetbrains.jet.di", "InjectorForJavaDescriptorResolver",
                            GenerateInjectors.class);

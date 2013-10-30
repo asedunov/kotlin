@@ -240,6 +240,7 @@ public class InjectorForTopDownAnalyzerForJvm implements InjectorForTopDownAnaly
         this.javaDescriptorResolver.setJavaClassFinder(javaClassFinder);
         this.javaDescriptorResolver.setJavaResolverCache(traceBasedJavaResolverCache);
         this.javaDescriptorResolver.setKotlinClassFinder(virtualFileKotlinClassFinder);
+        this.javaDescriptorResolver.setModule(moduleDescriptor);
         this.javaDescriptorResolver.setNamespaceResolver(javaNamespaceResolver);
         this.javaDescriptorResolver.setSignatureChecker(psiBasedMethodSignatureChecker);
 
