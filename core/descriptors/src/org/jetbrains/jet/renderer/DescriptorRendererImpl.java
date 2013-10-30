@@ -210,10 +210,7 @@ public class DescriptorRendererImpl implements DescriptorRenderer {
         if (type == CANT_INFER_LAMBDA_PARAM_TYPE || type == CANT_INFER_TYPE_PARAMETER) {
             return "???";
         }
-        if (type.isError()) {
-            return type.toString();
-        }
-        if (KotlinBuiltIns.getInstance().isFunctionOrExtensionFunctionType(type) && prettyFunctionTypes) {
+        if (!type.isError() && KotlinBuiltIns.getInstance().isFunctionOrExtensionFunctionType(type) && prettyFunctionTypes) {
             return renderFunctionType(type);
         }
         return renderDefaultType(type);
@@ -223,13 +220,18 @@ public class DescriptorRendererImpl implements DescriptorRenderer {
     private String renderDefaultType(@NotNull JetType type) {
         StringBuilder sb = new StringBuilder();
 
-        sb.append(renderTypeName(type.getConstructor()));
+        if (type.isError()) {
+            sb.append(type.getConstructor().toString());
+        }
+        else {
+            sb.append(renderTypeName(type.getConstructor()));
+        }
         if (!type.getArguments().isEmpty()) {
             sb.append("<");
             appendTypeProjections(type.getArguments(), sb);
             sb.append(">");
         }
-        if (type.isNullable()) {
+        if (type.isNullable() && !type.isError()) {
             sb.append("?");
         }
         return sb.toString();
