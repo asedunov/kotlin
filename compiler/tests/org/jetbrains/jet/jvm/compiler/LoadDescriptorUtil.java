@@ -91,7 +91,9 @@ public final class LoadDescriptorUtil {
             @NotNull ConfigurationKind configurationKind
     ) {
         CompilerConfiguration configuration = JetTestUtils.compilerConfigurationForTests(
-                configurationKind, TestJdkKind.MOCK_JDK, JetTestUtils.getAnnotationsJar(),
+                configurationKind, TestJdkKind.MOCK_JDK,
+                JetTestUtils.getAnnotationsJar(),
+                JetTestUtils.getAnnotationsExtJar(),
                 javaRoot,
                 new File("compiler/tests") // for @ExpectLoadError annotation
         );
