@@ -135,7 +135,7 @@ public class JavaDescriptorResolver implements DependencyClassByQualifiedNameRes
 
     @Override
     public ClassDescriptor resolveClass(@NotNull FqName qualifiedName) {
-        return classResolver.resolveClass(qualifiedName, IGNORE_KOTLIN_SOURCES);
+        return resolveClass(qualifiedName, IGNORE_KOTLIN_SOURCES);
     }
 
     @Nullable
