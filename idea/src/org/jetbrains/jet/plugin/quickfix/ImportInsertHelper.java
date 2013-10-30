@@ -22,7 +22,6 @@ import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.*;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.jet.lang.DefaultModuleConfiguration;
 import org.jetbrains.jet.lang.descriptors.ClassDescriptor;
 import org.jetbrains.jet.lang.descriptors.DeclarationDescriptor;
 import org.jetbrains.jet.lang.psi.*;
@@ -30,7 +29,7 @@ import org.jetbrains.jet.lang.resolve.BindingContext;
 import org.jetbrains.jet.lang.resolve.BindingContextUtils;
 import org.jetbrains.jet.lang.resolve.DescriptorUtils;
 import org.jetbrains.jet.lang.resolve.ImportPath;
-import org.jetbrains.jet.lang.resolve.java.JavaBridgeConfiguration;
+import org.jetbrains.jet.lang.resolve.java.AnalyzerFacadeForJVM;
 import org.jetbrains.jet.lang.resolve.java.JavaDescriptorResolver;
 import org.jetbrains.jet.lang.resolve.name.FqName;
 import org.jetbrains.jet.lang.types.JetType;
@@ -40,7 +39,7 @@ import org.jetbrains.jet.plugin.framework.KotlinFrameworkDetector;
 import org.jetbrains.jet.plugin.project.AnalyzerFacadeWithCache;
 import org.jetbrains.jet.plugin.references.JetPsiReference;
 import org.jetbrains.jet.util.QualifiedNamesUtil;
-import org.jetbrains.k2js.analyze.JsConfiguration;
+import org.jetbrains.k2js.analyze.AnalyzerFacadeForJS;
 
 import java.util.List;
 
@@ -143,26 +142,14 @@ public class ImportInsertHelper {
             }
         }
 
-        if (isImportedWithKotlinDefault(importPath)) return true;
-
-        if (KotlinFrameworkDetector.isJsKotlinModule(jetFile)) {
-            return isImportedWithJsDefault(importPath);
-        }
-        else {
-            return isImportedWithJavaDefault(importPath);
-        }
+        return isImportedWithDefault(importPath, jetFile);
     }
 
-    public static boolean isImportedWithJavaDefault(ImportPath importPath) {
-        return QualifiedNamesUtil.isImported(JavaBridgeConfiguration.DEFAULT_JAVA_IMPORTS, importPath);
-    }
-
-    public static boolean isImportedWithJsDefault(ImportPath importPath) {
-        return QualifiedNamesUtil.isImported(JsConfiguration.DEFAULT_IMPORT_PATHS, importPath);
-    }
-
-    public static boolean isImportedWithKotlinDefault(ImportPath importPath) {
-        return QualifiedNamesUtil.isImported(DefaultModuleConfiguration.DEFAULT_JET_IMPORTS, importPath);
+    public static boolean isImportedWithDefault(@NotNull ImportPath importPath, @NotNull JetFile contextFile) {
+        List<ImportPath> defaultImports = KotlinFrameworkDetector.isJsKotlinModule(contextFile)
+                                   ? AnalyzerFacadeForJS.DEFAULT_IMPORTS
+                                   : AnalyzerFacadeForJVM.DEFAULT_IMPORTS;
+        return QualifiedNamesUtil.isImported(defaultImports, importPath);
     }
 
     public static boolean doNeedImport(@NotNull ImportPath importPath, @NotNull JetFile file) {
