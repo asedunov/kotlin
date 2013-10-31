@@ -38,9 +38,11 @@ import org.jetbrains.jet.lang.resolve.BindingTrace;
 import org.jetbrains.jet.lang.resolve.DescriptorUtils;
 import org.jetbrains.jet.lang.resolve.calls.util.ExpressionAsFunctionDescriptor;
 import org.jetbrains.jet.lang.resolve.java.*;
+import org.jetbrains.jet.lang.resolve.java.lazy.descriptors.*;
 import org.jetbrains.jet.lang.resolve.java.mapping.KotlinToJavaTypesMap;
 import org.jetbrains.jet.lang.resolve.name.FqNameUnsafe;
 import org.jetbrains.jet.lang.resolve.name.Name;
+import org.jetbrains.jet.lang.resolve.scopes.JetScope;
 import org.jetbrains.jet.lang.types.*;
 import org.jetbrains.jet.lang.types.lang.KotlinBuiltIns;
 
@@ -104,24 +106,12 @@ public class JetTypeMapper extends BindingTraceAware {
     }
 
     @NotNull
-    private JavaNamespaceKind getNsKind(@NotNull NamespaceDescriptor ns) {
-        JavaNamespaceKind javaNamespaceKind = bindingContext.get(JavaBindingContext.JAVA_NAMESPACE_KIND, ns);
-        Boolean src = bindingContext.get(BindingContext.NAMESPACE_IS_SRC, ns);
-
-        if (javaNamespaceKind == null && src == null) {
-            throw new IllegalStateException("unknown namespace origin: " + ns);
+    private static JavaNamespaceKind getNsKind(@NotNull NamespaceDescriptor ns) {
+        JetScope scope = ns.getMemberScope();
+        if (scope instanceof LazyPackageFragmentScopeForJavaClass) {
+            return JavaNamespaceKind.CLASS_STATICS;
         }
-
-        if (javaNamespaceKind != null) {
-            if (javaNamespaceKind == JavaNamespaceKind.CLASS_STATICS && src != null) {
-                throw new IllegalStateException(
-                        "conflicting namespace " + ns + ": it is both java statics and from src");
-            }
-            return javaNamespaceKind;
-        }
-        else {
-            return JavaNamespaceKind.PROPER;
-        }
+        return JavaNamespaceKind.PROPER;
     }
 
     @NotNull
