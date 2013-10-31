@@ -207,7 +207,26 @@ public class JavaDescriptorResolver implements DependencyClassByQualifiedNameRes
             subModule = new LazyJavaSubModule(
                     new GlobalJavaResolverContext(
                             storageManager,
-                            javaClassFinder,
+                            new JavaClassFinder() {
+                                @Nullable
+                                @Override
+                                public JavaClass findClass(@NotNull FqName fqName) {
+                                    JavaClass javaClass = javaClassFinder.findClass(fqName);
+                                    if (javaClass == null) {
+                                        return null;
+                                    }
+                                    if (DescriptorResolverUtils.isCompiledKotlinClassOrPackageClass(javaClass)) {
+                                        return null;
+                                    }
+                                    return javaClass;
+                                }
+
+                                @Nullable
+                                @Override
+                                public JavaPackage findPackage(@NotNull FqName fqName) {
+                                    return javaClassFinder.findPackage(fqName);
+                                }
+                            },
                             new LazyJavaClassResolver() {
                                 @Override
                                 public ClassDescriptor resolveClass(JavaClass aClass) {
