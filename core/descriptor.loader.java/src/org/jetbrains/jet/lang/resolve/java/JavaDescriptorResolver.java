@@ -24,13 +24,17 @@ import org.jetbrains.jet.lang.descriptors.ClassDescriptor;
 import org.jetbrains.jet.lang.descriptors.ModuleDescriptor;
 import org.jetbrains.jet.lang.descriptors.ModuleDescriptorImpl;
 import org.jetbrains.jet.lang.descriptors.NamespaceDescriptor;
+import org.jetbrains.jet.lang.descriptors.annotations.AnnotationDescriptor;
+import org.jetbrains.jet.lang.descriptors.impl.NamespaceDescriptorParent;
 import org.jetbrains.jet.lang.resolve.DescriptorUtils;
 import org.jetbrains.jet.lang.resolve.ImportPath;
+import org.jetbrains.jet.lang.resolve.java.descriptor.JavaNamespaceDescriptor;
 import org.jetbrains.jet.lang.resolve.java.lazy.GlobalJavaResolverContext;
 import org.jetbrains.jet.lang.resolve.java.lazy.LazyJavaClassResolver;
 import org.jetbrains.jet.lang.resolve.java.lazy.LazyJavaSubModule;
 import org.jetbrains.jet.lang.resolve.java.resolver.*;
 import org.jetbrains.jet.lang.resolve.java.structure.JavaClass;
+import org.jetbrains.jet.lang.resolve.java.structure.JavaPackage;
 import org.jetbrains.jet.lang.resolve.kotlin.DeserializedDescriptorResolver;
 import org.jetbrains.jet.lang.resolve.kotlin.KotlinClassFinder;
 import org.jetbrains.jet.lang.resolve.kotlin.KotlinJvmBinaryClass;
@@ -45,6 +49,7 @@ import javax.inject.Inject;
 import java.util.Collections;
 
 import static org.jetbrains.jet.lang.resolve.java.DescriptorSearchRule.IGNORE_KOTLIN_SOURCES;
+import static org.jetbrains.jet.lang.resolve.java.DescriptorSearchRule.INCLUDE_KOTLIN_SOURCES;
 
 public class JavaDescriptorResolver implements DependencyClassByQualifiedNameResolver {
     private static final boolean LAZY = true;
@@ -65,6 +70,62 @@ public class JavaDescriptorResolver implements DependencyClassByQualifiedNameRes
                         ClassDescriptor deserializedDescriptor = deserializedDescriptorResolver.resolveClass(kotlinClass);
                         if (deserializedDescriptor != null) {
                             return deserializedDescriptor;
+                        }
+                    }
+                    return null;
+                }
+            }
+    );
+
+    private final MemoizedFunctionToNullable<FqName, NamespaceDescriptor> kotlinNamespacesFromBinaries = storageManager.createMemoizedFunctionWithNullableValues(
+            new Function1<FqName, NamespaceDescriptor>() {
+                @Override
+                public NamespaceDescriptor invoke(FqName fqName) {
+                    JavaPackage javaPackage = javaClassFinder.findPackage(fqName);
+                    if (javaPackage != null) {
+                        FqName packageClassFqName = PackageClassUtils.getPackageClassFqName(fqName);
+                        KotlinJvmBinaryClass kotlinClass = kotlinClassFinder.find(packageClassFqName);
+
+                        if (kotlinClass != null) {
+                            NamespaceDescriptorParent parentNs = resolveParentNamespace(fqName);
+                            if (parentNs == null) {
+                                System.out.println("Parent not found: " + fqName);
+                                return null;
+                            }
+
+                            JavaNamespaceDescriptor javaNamespaceDescriptor = new JavaNamespaceDescriptor(
+                                    parentNs,
+                                    Collections.<AnnotationDescriptor>emptyList(), // TODO
+                                    fqName
+                            );
+                            JetScope kotlinPackageScope = deserializedDescriptorResolver.createKotlinPackageScope(javaNamespaceDescriptor, kotlinClass);
+                            if (kotlinPackageScope != null) {
+                                javaNamespaceDescriptor.setMemberScope(kotlinPackageScope);
+                                return javaNamespaceDescriptor;
+                            }
+                        }
+                    }
+                    return null;
+                }
+            }
+    );
+
+    private final MemoizedFunctionToNullable<NamespaceDescriptor, JetScope> kotlinNamespacesScopesFromBinaries = storageManager.createMemoizedFunctionWithNullableValues(
+            new Function1<NamespaceDescriptor, JetScope>() {
+                @Override
+                public JetScope invoke(NamespaceDescriptor namespaceDescriptor) {
+                    FqName fqName = DescriptorUtils.getFQName(namespaceDescriptor).toSafe();
+
+                    JavaPackage javaPackage = javaClassFinder.findPackage(fqName);
+                    if (javaPackage != null) {
+                        FqName packageClassFqName = PackageClassUtils.getPackageClassFqName(fqName);
+                        KotlinJvmBinaryClass kotlinClass = kotlinClassFinder.find(packageClassFqName);
+
+                        if (kotlinClass != null) {
+                            JetScope kotlinPackageScope = deserializedDescriptorResolver.createKotlinPackageScope(namespaceDescriptor, kotlinClass);
+                            if (kotlinPackageScope != null) {
+                                return kotlinPackageScope;
+                            }
                         }
                     }
                     return null;
@@ -177,7 +238,8 @@ public class JavaDescriptorResolver implements DependencyClassByQualifiedNameRes
                             externalSignatureResolver,
                             errorReporter,
                             signatureChecker,
-                            javaResolverCache
+                            javaResolverCache,
+                            this
                     ),
                     module
             );
@@ -201,14 +263,38 @@ public class JavaDescriptorResolver implements DependencyClassByQualifiedNameRes
     @Nullable
     public NamespaceDescriptor resolveNamespace(@NotNull FqName qualifiedName, @NotNull DescriptorSearchRule searchRule) {
         if (LAZY) {
+            NamespaceDescriptor kotlinNamespaceDescriptor = javaResolverCache.getPackageResolvedFromSource(qualifiedName);
+            if (kotlinNamespaceDescriptor != null) {
+                return kotlinNamespaceDescriptor;
+            }
+
+            NamespaceDescriptor fromBinaries = kotlinNamespacesFromBinaries.invoke(qualifiedName);
+            if (fromBinaries != null) {
+                return fromBinaries;
+            }
+
             return getSubModule().getPackageFragment(qualifiedName);
         }
         return namespaceResolver.resolveNamespace(qualifiedName, searchRule);
     }
 
     @Nullable
+    private NamespaceDescriptorParent resolveParentNamespace(@NotNull FqName fqName) {
+        if (fqName.isRoot()) {
+            return module;
+        }
+        else {
+            return resolveNamespace(fqName.parent(), INCLUDE_KOTLIN_SOURCES);
+        }
+    }
+
+    @Nullable
     public JetScope getJavaPackageScope(@NotNull NamespaceDescriptor namespaceDescriptor) {
         if (LAZY) {
+            JetScope fromBinaries = kotlinNamespacesScopesFromBinaries.invoke(namespaceDescriptor);
+            if (fromBinaries != null) {
+                return fromBinaries;
+            }
             NamespaceDescriptor packageFragment = getSubModule().getPackageFragment(DescriptorUtils.getFQName(namespaceDescriptor).toSafe());
             if (packageFragment == null) {
                 return null;
