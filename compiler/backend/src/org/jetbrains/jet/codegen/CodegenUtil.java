@@ -53,8 +53,6 @@ public class CodegenUtil {
     private CodegenUtil() {
     }
 
-    private static final Random RANDOM = new Random(55L);
-
     public static boolean isInterface(DeclarationDescriptor descriptor) {
         if (descriptor instanceof ClassDescriptor) {
             ClassKind kind = ((ClassDescriptor) descriptor).getKind();
@@ -91,18 +89,6 @@ public class CodegenUtil {
     public static boolean isNonLiteralObject(JetClassOrObject myClass) {
         return myClass instanceof JetObjectDeclaration && !((JetObjectDeclaration) myClass).isObjectLiteral();
     }
-
-    public static String createTmpVariableName(Collection<String> existingNames) {
-        String prefix = "tmp";
-        int i = RANDOM.nextInt(Integer.MAX_VALUE);
-        String name = prefix + i;
-        while (existingNames.contains(name)) {
-            i++;
-            name = prefix + i;
-        }
-        return name;
-    }
-
 
     public static JvmMethodSignature erasedInvokeSignature(FunctionDescriptor fd) {
         BothSignatureWriter signatureWriter = new BothSignatureWriter(BothSignatureWriter.Mode.METHOD, false);
