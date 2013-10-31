@@ -17,8 +17,10 @@
 package org.jetbrains.jet.codegen;
 
 import com.google.common.io.Files;
-import com.intellij.openapi.util.Disposer;
+import com.intellij.openapi.util.Condition;
 import com.intellij.openapi.util.io.FileUtil;
+import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.util.containers.ContainerUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.asm4.*;
 import org.jetbrains.jet.JetTestUtils;
@@ -67,34 +69,35 @@ public abstract class AbstractCheckLocalVariablesTableTest extends TestCaseWithT
 
         ClassFileFactory factory = GenerationUtils.compileFileGetClassFileFactoryForTest(psiFile);
 
-        String modifiedTestName = ktFile.getName().replace(".kt", ".class");
-        boolean isClassFound = false;
-        for (String filename : factory.files()) {
-            if (filename.equals(modifiedTestName)) {
-                isClassFound = true;
-                ClassReader cr = new ClassReader(factory.asBytes(filename));
-                List<LocalVariable> expectedLocalVariables = parseExpectations();
-                List<LocalVariable> actualLocalVariables = readLocalVariable(cr, parseMethodName());
+        String classAndMethod = parseClassAndMethodSignature();
+        String[] split = classAndMethod.split("\\.");
+        assert split.length == 2 : "Exactly one dot is expected: " + classAndMethod;
+        final String classFileRegex = StringUtil.escapeToRegexp(split[0] + ".class").replace("\\*", ".+");
+        String methodName = split[1];
 
-                assertEquals("Count of variables are different", expectedLocalVariables.size(), actualLocalVariables.size());
-
-                int index = 0;
-                for (LocalVariable expectedVariable : expectedLocalVariables) {
-                    LocalVariable actualVariable = actualLocalVariables.get(index);
-                    assertEquals("Names are different", expectedVariable.name, actualVariable.name);
-                    assertEquals("Types are different", expectedVariable.type, actualVariable.type);
-                    assertEquals("Indexes are different", expectedVariable.index, actualVariable.index);
-                    index++;
-                }
+        String classFileName = ContainerUtil.find(factory.files(), new Condition<String>() {
+            @Override
+            public boolean value(String s) {
+                return s.matches(classFileRegex);
             }
+        });
+
+        assertNotNull("Couldn't find class file for pattern " + classFileRegex + " in: " + factory.files(), classFileName);
+
+        ClassReader cr = new ClassReader(factory.asBytes(classFileName));
+        List<LocalVariable> expectedLocalVariables = parseExpectations();
+        List<LocalVariable> actualLocalVariables = readLocalVariable(cr, methodName);
+
+        assertEquals("Count of variables are different", expectedLocalVariables.size(), actualLocalVariables.size());
+
+        int index = 0;
+        for (LocalVariable expectedVariable : expectedLocalVariables) {
+            LocalVariable actualVariable = actualLocalVariables.get(index);
+            assertEquals("Names are different", expectedVariable.name, actualVariable.name);
+            assertEquals("Types are different for " + expectedVariable.name, expectedVariable.type, actualVariable.type);
+            assertEquals("Indexes are different", expectedVariable.index, actualVariable.index);
+            index++;
         }
-
-        if (!isClassFound) {
-            throw new AssertionError("file name should be the same as class name. File name is " + modifiedTestName);
-        }
-
-
-        Disposer.dispose(myTestRootDisposable);
     }
 
 
@@ -150,17 +153,17 @@ public abstract class AbstractCheckLocalVariablesTableTest extends TestCaseWithT
         }
     }
 
-    private String parseMethodName() throws IOException {
+    @NotNull
+    private String parseClassAndMethodSignature() throws IOException {
         List<String> lines = Files.readLines(ktFile, Charset.forName("utf-8"));
-        for (int i = 0; i < lines.size(); ++i) {
-            Matcher methodMatcher = methodPattern.matcher(lines.get(i));
+        for (String line : lines) {
+            Matcher methodMatcher = methodPattern.matcher(line);
             if (methodMatcher.matches()) {
                 return methodMatcher.group(1);
             }
         }
 
-        assertTrue("method instructions not found", false);
-        return null;
+        throw new AssertionError("method instructions not found");
     }
 
     @NotNull
