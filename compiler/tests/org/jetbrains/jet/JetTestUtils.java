@@ -95,6 +95,7 @@ public class JetTestUtils {
     public static final BindingTrace DUMMY_TRACE = new BindingTrace() {
 
 
+        @NotNull
         @Override
         public BindingContext getBindingContext() {
             return new BindingContext() {
@@ -155,6 +156,7 @@ public class JetTestUtils {
     };
 
     public static BindingTrace DUMMY_EXCEPTION_ON_ERROR_TRACE = new BindingTrace() {
+        @NotNull
         @Override
         public BindingContext getBindingContext() {
             return new BindingContext() {
