@@ -62,6 +62,7 @@ import org.jetbrains.jet.psi.AbstractJetPsiMatcherTest;
 import org.jetbrains.jet.resolve.AbstractResolveBaseTest;
 import org.jetbrains.jet.resolve.AbstractResolveTest;
 import org.jetbrains.jet.resolve.AbstractResolveWithLibTest;
+import org.jetbrains.jet.resolve.annotation.AbstractAnnotationParameterTest;
 import org.jetbrains.jet.safeDelete.AbstractJetSafeDeleteTest;
 
 import java.io.File;
@@ -510,6 +511,13 @@ public class GenerateTests {
                 "DiagnosticMessageTestGenerated",
                 AbstractDiagnosticMessageTest.class,
                 testModel("idea/testData/diagnosticMessage")
+        );
+
+        generateTest(
+                "compiler/tests",
+                "AnnotationParameterTestGenerated",
+                AbstractAnnotationParameterTest.class,
+                testModel("compiler/testData/resolveAnnotations/parameters")
         );
     }
 
