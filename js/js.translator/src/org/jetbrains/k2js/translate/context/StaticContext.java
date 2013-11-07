@@ -25,7 +25,6 @@ import org.jetbrains.annotations.Nullable;
 import org.jetbrains.jet.lang.descriptors.*;
 import org.jetbrains.jet.lang.resolve.BindingContext;
 import org.jetbrains.jet.lang.resolve.BindingContextUtils;
-import org.jetbrains.jet.lang.resolve.DescriptorUtils;
 import org.jetbrains.k2js.config.EcmaVersion;
 import org.jetbrains.k2js.config.LibrarySourcesConfig;
 import org.jetbrains.k2js.translate.context.generator.Generator;
@@ -213,11 +212,11 @@ public final class StaticContext {
                 @Override
                 @Nullable
                 public JsName apply(@NotNull DeclarationDescriptor descriptor) {
-                    if (!(descriptor instanceof NamespaceDescriptor)) {
+                    if (!(descriptor instanceof PackageViewDescriptor)) {
                         return null;
                     }
 
-                    String name = Namer.generateNamespaceName(descriptor);
+                    String name = Namer.generateNamespaceName((PackageViewDescriptor) descriptor);
                     return getRootScope().declareName(name);
                 }
             };
@@ -396,10 +395,10 @@ public final class StaticContext {
                     return getScopeForDescriptor(superclass).innerScope("Scope for class " + descriptor.getName());
                 }
             };
-            Rule<JsScope> generateNewScopesForNamespaceDescriptors = new Rule<JsScope>() {
+            Rule<JsScope> generateNewScopesForPackageDescriptors = new Rule<JsScope>() {
                 @Override
                 public JsScope apply(@NotNull DeclarationDescriptor descriptor) {
-                    if (!(descriptor instanceof NamespaceDescriptor)) {
+                    if (!(descriptor instanceof PackageViewDescriptor || descriptor instanceof PackageFragmentDescriptor)) { // TODO 0 ???
                         return null;
                     }
                     return getRootScope().innerScope("Namespace " + descriptor.getName());
@@ -430,7 +429,7 @@ public final class StaticContext {
             addRule(createFunctionObjectsForCallableDescriptors);
             addRule(generateNewScopesForClassesWithNoAncestors);
             addRule(generateInnerScopesForDerivedClasses);
-            addRule(generateNewScopesForNamespaceDescriptors);
+            addRule(generateNewScopesForPackageDescriptors);
             addRule(generateInnerScopesForMembers);
         }
     }
@@ -455,23 +454,34 @@ public final class StaticContext {
                 }
             };
             //TODO: review and refactor
-            Rule<JsNameRef> namespaceLevelDeclarationsHaveEnclosingNamespacesNamesAsQualifier = new Rule<JsNameRef>() {
+            Rule<JsNameRef> packageLevelDeclarationsHaveEnclosingNamespacesNamesAsQualifier = new Rule<JsNameRef>() {
                 @Override
                 public JsNameRef apply(@NotNull DeclarationDescriptor descriptor) {
+                    // TODO 0 remove debug output!!!
+                    System.err.println("=============== " + descriptor);
                     DeclarationDescriptor containingDescriptor = getContainingDeclaration(descriptor);
-                    if (!(containingDescriptor instanceof NamespaceDescriptor)) {
+                    if (!(containingDescriptor instanceof PackageFragmentDescriptor || containingDescriptor instanceof PackageViewDescriptor)) { // TODO 0 dirty
                         return null;
                     }
 
-                    JsNameRef result = new JsNameRef(getNameForDescriptor(containingDescriptor));
-                    if (DescriptorUtils.isRootNamespace((NamespaceDescriptor) containingDescriptor)) {
+                    PackageViewDescriptor packageView;
+                    if (containingDescriptor instanceof PackageFragmentDescriptor) {
+                        PackageFragmentDescriptor packageFragment = (PackageFragmentDescriptor) containingDescriptor;
+                        packageView = packageFragment.getContainingDeclaration().getPackage(packageFragment.getFqName());
+                    }
+                    else {
+                        packageView = ((PackageViewDescriptor) containingDescriptor);
+                    }
+
+                    JsNameRef result = new JsNameRef(getNameForDescriptor(packageView));
+                    if (packageView.getFqName().isRoot()) {
                         return result;
                     }
 
+
                     JsNameRef qualifier = result;
-                    while ((containingDescriptor = getContainingDeclaration(containingDescriptor)) instanceof NamespaceDescriptor &&
-                           !DescriptorUtils.isRootNamespace((NamespaceDescriptor) containingDescriptor)) {
-                        JsNameRef ref = getNameForDescriptor(containingDescriptor).makeRef();
+                    while ((packageView = packageView.getContainingDeclaration()) != null && !packageView.getFqName().isRoot()) { // TODO 0 simplify
+                        JsNameRef ref = getNameForDescriptor(packageView).makeRef();
                         qualifier.setQualifier(ref);
                         qualifier = ref;
                     }
@@ -523,7 +533,7 @@ public final class StaticContext {
             addRule(libraryObjectsHaveKotlinQualifier);
             addRule(constructorHaveTheSameQualifierAsTheClass);
             addRule(standardObjectsHaveKotlinQualifier);
-            addRule(namespaceLevelDeclarationsHaveEnclosingNamespacesNamesAsQualifier);
+            addRule(packageLevelDeclarationsHaveEnclosingNamespacesNamesAsQualifier);
         }
     }
 
@@ -549,16 +559,16 @@ public final class StaticContext {
                     return true;
                 }
             };
-            Rule<Boolean> topLevelNamespaceHaveNoQualifier = new Rule<Boolean>() {
+            Rule<Boolean> topLevelPackageHaveNoQualifier = new Rule<Boolean>() {
                 @Override
                 public Boolean apply(@NotNull DeclarationDescriptor descriptor) {
-                    if (descriptor instanceof NamespaceDescriptor && DescriptorUtils.isRootNamespace((NamespaceDescriptor) descriptor)) {
+                    if (descriptor instanceof PackageViewDescriptor && ((PackageViewDescriptor) descriptor).getFqName().isRoot()) {
                         return true;
                     }
                     return null;
                 }
             };
-            addRule(topLevelNamespaceHaveNoQualifier);
+            addRule(topLevelPackageHaveNoQualifier);
             addRule(propertiesHaveNoQualifiers);
             addRule(nativeObjectsHaveNoQualifiers);
         }
