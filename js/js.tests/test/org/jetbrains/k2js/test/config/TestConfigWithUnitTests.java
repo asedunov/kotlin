@@ -35,8 +35,9 @@ public class TestConfigWithUnitTests extends TestConfig {
         public TestConfig create(@NotNull Project project,
                 @NotNull EcmaVersion version,
                 @NotNull List<JetFile> files,
+                @NotNull BindingContext libraryContext,
                 @NotNull ModuleDescriptor module) {
-            return new TestConfigWithUnitTests(project, version, files, module);
+            return new TestConfigWithUnitTests(project, version, files, libraryContext, module);
         }
     };
 
@@ -48,7 +49,8 @@ public class TestConfigWithUnitTests extends TestConfig {
     public TestConfigWithUnitTests(@NotNull Project project,
             @NotNull EcmaVersion version,
             @NotNull List<JetFile> files,
+            @NotNull BindingContext libraryContext,
             @NotNull ModuleDescriptor module) {
-        super(project, version, files, module, false);
+        super(project, version, files, libraryContext, module, false);
     }
 }

@@ -20,11 +20,12 @@ import com.intellij.openapi.project.Project;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.jet.lang.descriptors.ModuleDescriptor;
 import org.jetbrains.jet.lang.psi.JetFile;
+import org.jetbrains.jet.lang.resolve.BindingContext;
 import org.jetbrains.k2js.config.EcmaVersion;
 
 import java.util.List;
 
 public interface TestConfigFactory {
     TestConfig create(@NotNull Project project, @NotNull EcmaVersion version,
-            @NotNull List<JetFile> files, @NotNull ModuleDescriptor module);
+            @NotNull List<JetFile> files, @NotNull BindingContext libraryContext, @NotNull ModuleDescriptor module);
 }

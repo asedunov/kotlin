@@ -89,7 +89,8 @@ public final class AnalyzerFacadeForJS {
             owner.addFragmentProvider(libraryModule.getPackageFragmentProvider()); // "import" analyzed library module
         }
 
-        BindingTrace trace = new BindingTraceContext();
+        BindingContext libraryContext = config.getLibraryContext();
+        BindingTrace trace = libraryContext == null ? new BindingTraceContext() : new DelegatingBindingTrace(libraryContext, "");
         owner.setModuleConfiguration(new JsConfiguration());
         InjectorForTopDownAnalyzerForJs injector = new InjectorForTopDownAnalyzerForJs(project, topDownAnalysisParameters, trace, owner);
         try {

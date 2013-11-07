@@ -24,7 +24,6 @@ import com.intellij.psi.PsiFile;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.jet.analyzer.AnalyzeExhaust;
-import org.jetbrains.jet.lang.descriptors.ModuleDescriptor;
 import org.jetbrains.jet.lang.psi.JetFile;
 import org.jetbrains.k2js.analyze.AnalyzerFacadeForJS;
 import org.jetbrains.k2js.config.Config;
@@ -46,7 +45,7 @@ public final class TranslationUtils {
     }
 
     @NotNull
-    private static SoftReference<ModuleDescriptor> cachedLibraryModule = new SoftReference<ModuleDescriptor>(null);
+    private static SoftReference<AnalyzeExhaust> cachedLibraryExhaust = new SoftReference<AnalyzeExhaust>(null);
 
     @Nullable
     private static List<JetFile> libFiles = null;
@@ -60,8 +59,8 @@ public final class TranslationUtils {
     }
 
     @NotNull
-    public static ModuleDescriptor getLibraryModule(@NotNull Project project) {
-        ModuleDescriptor cachedModule = cachedLibraryModule.get();
+    public static AnalyzeExhaust getLibraryAnalyzeExhaust(@NotNull Project project) {
+        AnalyzeExhaust cachedModule = cachedLibraryExhaust.get();
         if (cachedModule != null) {
             return cachedModule;
         }
@@ -74,10 +73,9 @@ public final class TranslationUtils {
             }
         };
         AnalyzeExhaust exhaust = AnalyzerFacadeForJS.analyzeFiles(allLibFiles, filesWithCode, Config.getEmptyConfig(project));
-        ModuleDescriptor newModule = exhaust.getModuleDescriptor();
         AnalyzerFacadeForJS.checkForErrors(allLibFiles, exhaust.getBindingContext());
-        cachedLibraryModule = new SoftReference<ModuleDescriptor>(newModule);
-        return newModule;
+        cachedLibraryExhaust = new SoftReference<AnalyzeExhaust>(exhaust);
+        return exhaust;
     }
 
     private static boolean isFileWithCode(@NotNull JetFile file) {
@@ -91,8 +89,10 @@ public final class TranslationUtils {
 
     @NotNull
     public static Config getConfig(@NotNull Project project, @NotNull EcmaVersion version, @NotNull TestConfigFactory configFactory) {
-        ModuleDescriptor preanalyzedModule = getLibraryModule(project);
-        return configFactory.create(project, version, getLibFilesWithCode(getAllLibFiles(project)), preanalyzedModule);
+        AnalyzeExhaust libraryAnalyzeExhaust = getLibraryAnalyzeExhaust(project);
+        return configFactory.create(
+                project, version, getLibFilesWithCode(getAllLibFiles(project)),
+                libraryAnalyzeExhaust.getBindingContext(), libraryAnalyzeExhaust.getModuleDescriptor());
     }
 
     public static void translateFiles(@NotNull Project project, @NotNull List<String> inputFiles,

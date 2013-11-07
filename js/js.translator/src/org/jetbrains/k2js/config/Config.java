@@ -192,6 +192,11 @@ public abstract class Config {
     }
 
     @Nullable
+    public BindingContext getLibraryContext() {
+        return null;
+    }
+
+    @Nullable
     public ModuleDescriptor getLibraryModule() {
         return null;
     }

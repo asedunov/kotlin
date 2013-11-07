@@ -20,6 +20,7 @@ import com.intellij.openapi.project.Project;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.jet.lang.descriptors.ModuleDescriptor;
 import org.jetbrains.jet.lang.psi.JetFile;
+import org.jetbrains.jet.lang.resolve.BindingContext;
 import org.jetbrains.k2js.config.Config;
 import org.jetbrains.k2js.config.EcmaVersion;
 
@@ -33,8 +34,9 @@ public class TestConfig extends Config {
         public TestConfig create(@NotNull Project project,
                 @NotNull EcmaVersion version,
                 @NotNull List<JetFile> files,
+                @NotNull BindingContext libraryContext,
                 @NotNull ModuleDescriptor module) {
-            return new TestConfig(project, version, files, module, false);
+            return new TestConfig(project, version, files, libraryContext, module, false);
         }
     };
 
@@ -43,21 +45,31 @@ public class TestConfig extends Config {
         public TestConfig create(@NotNull Project project,
                 @NotNull EcmaVersion version,
                 @NotNull List<JetFile> files,
+                @NotNull BindingContext libraryContext,
                 @NotNull ModuleDescriptor module) {
-            return new TestConfig(project, version, files, module, true);
+            return new TestConfig(project, version, files, libraryContext, module, true);
         }
     };
 
     @NotNull
     private final List<JetFile> jsLibFiles;
     @NotNull
+    private final BindingContext libraryContext;
+    @NotNull
     private final ModuleDescriptor libraryModule;
 
     public TestConfig(@NotNull Project project, @NotNull EcmaVersion version,
-            @NotNull List<JetFile> files, @NotNull ModuleDescriptor module, boolean sourcemap) {
+            @NotNull List<JetFile> files, @NotNull BindingContext libraryContext, @NotNull ModuleDescriptor module, boolean sourcemap) {
         super(project, REWRITABLE_MODULE_NAME, version, sourcemap);
         jsLibFiles = files;
+        this.libraryContext = libraryContext;
         libraryModule = module;
+    }
+
+    @NotNull
+    @Override
+    public BindingContext getLibraryContext() {
+        return libraryContext;
     }
 
     @NotNull
