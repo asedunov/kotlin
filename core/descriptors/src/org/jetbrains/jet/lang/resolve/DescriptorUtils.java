@@ -222,10 +222,6 @@ public class DescriptorUtils {
         }
     }
 
-    public static boolean isRootNamespace(@NotNull NamespaceDescriptor namespaceDescriptor) {
-        return namespaceDescriptor.getContainingDeclaration() instanceof ModuleDescriptor;
-    }
-
     public static boolean isFunctionLiteral(@NotNull FunctionDescriptor descriptor) {
         return descriptor instanceof AnonymousFunctionDescriptor;
     }

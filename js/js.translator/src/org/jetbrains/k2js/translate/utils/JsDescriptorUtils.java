@@ -142,17 +142,9 @@ public final class JsDescriptorUtils {
                isDefaultAccessor(propertyDescriptor.getSetter());
     }
 
-    public static boolean isStandardDeclaration(@NotNull DeclarationDescriptor descriptor) {
-        NamespaceDescriptor namespace = getContainingNamespace(descriptor);
-        if (namespace == null) {
-            return false;
-        }
-        return namespace.equals(KotlinBuiltIns.getInstance().getBuiltInsScope().getContainingDeclaration());
-    }
-
-    @Nullable
-    public static NamespaceDescriptor getContainingNamespace(@NotNull DeclarationDescriptor descriptor) {
-        return DescriptorUtils.getParentOfType(descriptor, NamespaceDescriptor.class);
+    public static boolean isBuiltin(@NotNull DeclarationDescriptor descriptor) {
+        PackageFragmentDescriptor containingPackageFragment = DescriptorUtils.getParentOfType(descriptor, PackageFragmentDescriptor.class);
+        return containingPackageFragment == KotlinBuiltIns.getInstance().getBuiltInsPackageFragment();
     }
 
     @Nullable

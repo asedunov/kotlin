@@ -18,11 +18,7 @@ package org.jetbrains.k2js.translate.context;
 
 import com.google.dart.compiler.backend.js.ast.*;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.jet.lang.descriptors.ClassDescriptor;
-import org.jetbrains.jet.lang.descriptors.DeclarationDescriptor;
-import org.jetbrains.jet.lang.descriptors.Named;
-import org.jetbrains.jet.lang.descriptors.NamespaceDescriptor;
-import org.jetbrains.jet.lang.resolve.DescriptorUtils;
+import org.jetbrains.jet.lang.descriptors.*;
 import org.jetbrains.jet.plugin.JetLanguage;
 import org.jetbrains.jet.lang.resolve.name.Name;
 
@@ -249,13 +245,8 @@ public final class Namer {
     }
 
     @NotNull
-    static String generateNamespaceName(DeclarationDescriptor descriptor) {
-        if (DescriptorUtils.isRootNamespace((NamespaceDescriptor) descriptor)) {
-            return getRootNamespaceName();
-        }
-        else {
-            return descriptor.getName().asString();
-        }
+    static String generateNamespaceName(PackageViewDescriptor descriptor) {
+        return descriptor.getFqName().isRoot() ? getRootNamespaceName() : descriptor.getName().asString();
     }
 
     @NotNull
