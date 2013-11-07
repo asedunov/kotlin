@@ -457,27 +457,18 @@ public final class StaticContext {
             Rule<JsNameRef> packageLevelDeclarationsHaveEnclosingNamespacesNamesAsQualifier = new Rule<JsNameRef>() {
                 @Override
                 public JsNameRef apply(@NotNull DeclarationDescriptor descriptor) {
-                    // TODO 0 remove debug output!!!
-                    System.err.println("=============== " + descriptor);
                     DeclarationDescriptor containingDescriptor = getContainingDeclaration(descriptor);
-                    if (!(containingDescriptor instanceof PackageFragmentDescriptor || containingDescriptor instanceof PackageViewDescriptor)) { // TODO 0 dirty
+                    if (!(containingDescriptor instanceof PackageFragmentDescriptor)) { // TODO 0 dirty
                         return null;
                     }
 
-                    PackageViewDescriptor packageView;
-                    if (containingDescriptor instanceof PackageFragmentDescriptor) {
-                        PackageFragmentDescriptor packageFragment = (PackageFragmentDescriptor) containingDescriptor;
-                        packageView = packageFragment.getContainingDeclaration().getPackage(packageFragment.getFqName());
-                    }
-                    else {
-                        packageView = ((PackageViewDescriptor) containingDescriptor);
-                    }
+                    PackageFragmentDescriptor packageFragment = (PackageFragmentDescriptor) containingDescriptor;
+                    PackageViewDescriptor packageView = packageFragment.getContainingDeclaration().getPackage(packageFragment.getFqName());
 
                     JsNameRef result = new JsNameRef(getNameForDescriptor(packageView));
                     if (packageView.getFqName().isRoot()) {
                         return result;
                     }
-
 
                     JsNameRef qualifier = result;
                     while ((packageView = packageView.getContainingDeclaration()) != null && !packageView.getFqName().isRoot()) { // TODO 0 simplify
@@ -486,21 +477,61 @@ public final class StaticContext {
                         qualifier = ref;
                     }
 
+                    String moduleName = getExternalModuleName(descriptor);
+                    if (moduleName != null) {
+                        if (LibrarySourcesConfig.UNKNOWN_EXTERNAL_MODULE_NAME.equals(moduleName)) {
+                            return null;
+                        }
+                        else {
+                            qualifier.setQualifier(new JsArrayAccess(namer.kotlin("modules"), program.getStringLiteral(moduleName)));
+                            return result;
+                        }
+                    }
+                    else {
+                        qualifier.setQualifier(new JsNameRef(Namer.getRootNamespaceName()));
+                        return result;
+                    }
+                }
+
+                public String getExternalModuleName(DeclarationDescriptor descriptor) {
                     PsiElement element = BindingContextUtils.descriptorToDeclaration(bindingContext, descriptor);
                     if (element == null && descriptor instanceof PropertyAccessorDescriptor) {
                         element = BindingContextUtils.descriptorToDeclaration(bindingContext, ((PropertyAccessorDescriptor) descriptor)
                                 .getCorrespondingProperty());
                     }
 
+                    String moduleName;
                     if (element != null) {
                         PsiFile file = element.getContainingFile();
-                        String moduleName = file.getUserData(LibrarySourcesConfig.EXTERNAL_MODULE_NAME);
-                        if (LibrarySourcesConfig.UNKNOWN_EXTERNAL_MODULE_NAME.equals(moduleName)) {
-                            return null;
-                        }
-                        else if (moduleName != null) {
-                            qualifier.setQualifier(new JsArrayAccess(namer.kotlin("modules"), program.getStringLiteral(moduleName)));
-                        }
+                        moduleName = file.getUserData(LibrarySourcesConfig.EXTERNAL_MODULE_NAME);
+                    }
+                    else {
+                        moduleName = null;
+                    }
+                    return moduleName;
+                }
+            };
+            // TODO 0 uprazdni!
+            Rule<JsNameRef> packageViewsHaveEnclosingNamesAsQualifier = new Rule<JsNameRef>() {
+                @Override
+                public JsNameRef apply(@NotNull DeclarationDescriptor descriptor) {
+                    if (!(descriptor instanceof PackageViewDescriptor)) { // TODO 0 dirty
+                        return null;
+                    }
+
+                    PackageViewDescriptor parentPackage = (PackageViewDescriptor) descriptor.getContainingDeclaration();
+
+                    JsNameRef result = new JsNameRef(getNameForDescriptor(parentPackage));
+                    if (parentPackage.getFqName().isRoot()) {
+                        return result;
+                    }
+
+
+                    JsNameRef qualifier = result;
+                    while ((parentPackage = parentPackage.getContainingDeclaration()) != null && !parentPackage.getFqName().isRoot()) { // TODO 0 simplify
+                        JsNameRef ref = getNameForDescriptor(parentPackage).makeRef();
+                        qualifier.setQualifier(ref);
+                        qualifier = ref;
                     }
 
                     if (qualifier.getQualifier() == null) {
@@ -534,6 +565,7 @@ public final class StaticContext {
             addRule(constructorHaveTheSameQualifierAsTheClass);
             addRule(standardObjectsHaveKotlinQualifier);
             addRule(packageLevelDeclarationsHaveEnclosingNamespacesNamesAsQualifier);
+            addRule(packageViewsHaveEnclosingNamesAsQualifier);
         }
     }
 
