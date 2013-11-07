@@ -227,7 +227,7 @@ public abstract class ExpectedResolveData {
             }
             else if ("!error".equals(name)) {
                 assertTrue(
-                       "Must have been resolved to error: " +
+                       "Mus t have been resolved to error: " +
                         renderReferenceInContext(referenceExpression) +
                         " but was resolved to " + renderNullableDescriptor(referenceTarget),
                        ErrorUtils.isError(referenceTarget)
