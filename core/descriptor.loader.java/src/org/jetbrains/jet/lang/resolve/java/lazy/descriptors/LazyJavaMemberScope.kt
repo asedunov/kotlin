@@ -39,6 +39,7 @@ import org.jetbrains.jet.lang.resolve.java.resolver.ExternalSignatureResolver
 import org.jetbrains.jet.lang.resolve.java.sam.SingleAbstractMethodUtils
 import org.jetbrains.jet.lang.resolve.java.descriptor.JavaPropertyDescriptorForObject
 import org.jetbrains.jet.lang.descriptors.impl.ClassDescriptorImpl
+import org.jetbrains.jet.utils.Printer
 
 public abstract class LazyJavaMemberScope(
         protected val c: LazyJavaResolverContextWithTypes,
@@ -339,4 +340,15 @@ public abstract class LazyJavaMemberScope(
     protected abstract fun addExtraDescriptors(result: MutableCollection<in DeclarationDescriptor>)
 
     override fun toString() = "Lazy scope for ${getContainingDeclaration()}"
+
+
+    override fun printScopeStructure(p: Printer) {
+        p.println(javaClass.getSimpleName(), " {")
+        p.pushIndent()
+
+        p.println("containigDeclaration: ${getContainingDeclaration()}")
+
+        p.popIndent()
+        p.println("}")
+    }
 }
