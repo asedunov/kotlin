@@ -2109,6 +2109,11 @@ public class BlackBoxCodegenTestGenerated extends AbstractBlackBoxCodegenTest {
             doTest("compiler/testData/codegen/box/extensionFunctions/kt1953_class.kt");
         }
         
+        @TestMetadata("kt4118.kt")
+        public void testKt4118() throws Exception {
+            doTest("compiler/testData/codegen/box/extensionFunctions/kt4118.kt");
+        }
+        
         @TestMetadata("kt475.kt")
         public void testKt475() throws Exception {
             doTest("compiler/testData/codegen/box/extensionFunctions/kt475.kt");
@@ -4198,6 +4203,21 @@ public class BlackBoxCodegenTestGenerated extends AbstractBlackBoxCodegenTest {
         @TestMetadata("kt3538.kt")
         public void testKt3538() throws Exception {
             doTest("compiler/testData/codegen/box/super/kt3538.kt");
+        }
+        
+        @TestMetadata("kt4173.kt")
+        public void testKt4173() throws Exception {
+            doTest("compiler/testData/codegen/box/super/kt4173.kt");
+        }
+        
+        @TestMetadata("kt4173_2.kt")
+        public void testKt4173_2() throws Exception {
+            doTest("compiler/testData/codegen/box/super/kt4173_2.kt");
+        }
+        
+        @TestMetadata("kt4173_3.kt")
+        public void testKt4173_3() throws Exception {
+            doTest("compiler/testData/codegen/box/super/kt4173_3.kt");
         }
         
         @TestMetadata("multipleSuperTraits.kt")

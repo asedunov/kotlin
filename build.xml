@@ -60,6 +60,7 @@
         <include name="core/descriptor.loader.java/src"/>
         <include name="compiler/frontend.java/src"/>
         <include name="core/serialization.java/src"/>
+        <include name="compiler/backend-common/src"/>
         <include name="compiler/backend/src"/>
         <include name="compiler/cli/src"/>
         <include name="compiler/cli/cli-common/src"/>
@@ -139,6 +140,7 @@
             <fileset dir="core/descriptors/src"/>
             <fileset dir="core/descriptor.loader.java/src"/>
             <fileset dir="compiler/frontend.java/src"/>
+            <fileset dir="compiler/backend-common/src"/>
             <fileset dir="compiler/backend/src"/>
             <fileset dir="compiler/cli/src"/>
             <fileset dir="j2k/src"/>
@@ -575,11 +577,10 @@
 
         <cleandir dir="${output}/classes/j2k"/>
 
-        <javac2 destdir="${output}/classes/j2k" debug="true" debuglevel="lines,vars,source" includeAntRuntime="false" target="${java.target}">
-            <withKotlin/>
+        <kotlinc output="${output}/classes/j2k">
             <src path="${basedir}/j2k/src"/>
             <classpath path="${kotlin-home}/lib/kotlin-compiler.jar"/>
-        </javac2>
+        </kotlinc>
 
         <jar jarfile="${kotlin-home}/lib/tools/j2k.jar">
             <fileset dir="${output}/classes/j2k" includes="org/jetbrains/jet/j2k/**"/>
