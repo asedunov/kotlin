@@ -9,7 +9,7 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="util.runtime" />
     <orderEntry type="module" module-name="serialization" />
-    <orderEntry type="module" module-name="annotations-ext" />
+    <orderEntry type="library" name="kotlin-annotations-ext" level="project" />
   </component>
 </module>
 
