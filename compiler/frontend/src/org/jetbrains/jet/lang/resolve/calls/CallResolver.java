@@ -370,7 +370,9 @@ public class CallResolver {
             candidateResolver.checkValueArgumentTypes(callCandidateResolutionContext);
             return results;
         }
-        ResolvedCallImpl<D> copy = CallResolverUtil.copy(resolvedCall, context);
+        ResolvedCallImpl<D> copy = CallResolverUtil.copy(resolvedCall);
+        context.trace.record(RESOLVED_CALL, context.call.getCalleeExpression(), copy);
+
         CallCandidateResolutionContext<D> callCandidateResolutionContext =
                 CallCandidateResolutionContext.createForCallBeingAnalyzed(copy, context, tracing);
         candidateResolver.completeTypeInferenceDependentOnExpectedTypeForCall(callCandidateResolutionContext, false);
